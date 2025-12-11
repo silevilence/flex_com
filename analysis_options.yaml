@@ -8,6 +8,17 @@
 # The following line activates a set of recommended lints for Flutter apps,
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
+analyzer:
+  exclude:
+    - "**/*.freezed.dart"
+    - "build/**"         # 排除构建目录
+    - ".dart_tool/**"    # 排除工具目录
+    - "ios/**"           # 排除原生层副本
+    - "android/**"       # 排除原生层副本
+    - "linux/**"
+    - "windows/**"
+    - "macos/**"
+    - "web/**"
 
 linter:
   # The lint rules applied to this project can be customized in the
