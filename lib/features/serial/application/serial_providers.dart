@@ -108,7 +108,8 @@ class SerialConnection extends _$SerialConnection {
 /// Provider for the serial data stream.
 ///
 /// This exposes the stream of data received from the serial port.
-@riverpod
+/// Uses keepAlive to ensure the stream is not disposed when there are no listeners.
+@Riverpod(keepAlive: true)
 Stream<Uint8List> serialDataStream(Ref ref) {
   final repository = ref.watch(serialRepositoryProvider);
   return repository.dataStream;

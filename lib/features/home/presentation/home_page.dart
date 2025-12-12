@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../serial/presentation/widgets/data_display_panel.dart';
+import '../../serial/presentation/widgets/send_panel.dart';
 import '../../serial/presentation/widgets/serial_config_panel.dart';
 
 /// Home page of the FlexCom application
@@ -18,16 +20,16 @@ class HomePage extends StatelessWidget {
             // Left panel - Serial configuration
             SizedBox(width: 300, child: SerialConfigPanel()),
             SizedBox(width: 16),
-            // Right panel - Placeholder for future data display
+            // Right panel - Data display and send
             Expanded(
-              child: Card(
-                child: Center(
-                  child: Text(
-                    '数据收发区\n(待实现)',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
-                  ),
-                ),
+              child: Column(
+                children: [
+                  // Data display area (takes most space)
+                  Expanded(child: DataDisplayPanel()),
+                  SizedBox(height: 8),
+                  // Send panel at the bottom
+                  SendPanel(),
+                ],
               ),
             ),
           ],

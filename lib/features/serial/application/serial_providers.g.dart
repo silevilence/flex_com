@@ -183,6 +183,7 @@ abstract class _$SerialConnection extends $Notifier<SerialConnectionState> {
 /// Provider for the serial data stream.
 ///
 /// This exposes the stream of data received from the serial port.
+/// Uses keepAlive to ensure the stream is not disposed when there are no listeners.
 
 @ProviderFor(serialDataStream)
 const serialDataStreamProvider = SerialDataStreamProvider._();
@@ -190,6 +191,7 @@ const serialDataStreamProvider = SerialDataStreamProvider._();
 /// Provider for the serial data stream.
 ///
 /// This exposes the stream of data received from the serial port.
+/// Uses keepAlive to ensure the stream is not disposed when there are no listeners.
 
 final class SerialDataStreamProvider
     extends
@@ -198,13 +200,14 @@ final class SerialDataStreamProvider
   /// Provider for the serial data stream.
   ///
   /// This exposes the stream of data received from the serial port.
+  /// Uses keepAlive to ensure the stream is not disposed when there are no listeners.
   const SerialDataStreamProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'serialDataStreamProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -223,4 +226,4 @@ final class SerialDataStreamProvider
   }
 }
 
-String _$serialDataStreamHash() => r'eea2a526f58bb4830df92918807051a533549ebc';
+String _$serialDataStreamHash() => r'f7bfe3edf6a332cbbe74d8a6037c8b8a71caf0fb';

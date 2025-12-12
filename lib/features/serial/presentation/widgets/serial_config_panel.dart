@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../settings/application/config_providers.dart';
 import '../../application/serial_providers.dart';
 import '../../domain/serial_port_config.dart';
 
@@ -22,12 +23,29 @@ class _SerialConfigPanelState extends ConsumerState<SerialConfigPanel> {
   int _stopBits = 1;
   Parity _parity = Parity.none;
   FlowControl _flowControl = FlowControl.none;
+  bool _configLoaded = false;
 
   @override
   Widget build(BuildContext context) {
     final portsAsync = ref.watch(availablePortsProvider);
     final connectionState = ref.watch(serialConnectionProvider);
     final isConnected = connectionState.isConnected;
+
+    // Watch saved config and apply when loaded (only once)
+    final savedConfigAsync = ref.watch(savedConfigProvider);
+    if (!_configLoaded && savedConfigAsync.hasValue) {
+      final config = savedConfigAsync.value;
+      if (config != null) {
+        // Apply config synchronously during build (before returning widgets)
+        _selectedPort = config.portName.isNotEmpty ? config.portName : null;
+        _baudRate = config.baudRate;
+        _dataBits = config.dataBits;
+        _stopBits = config.stopBits;
+        _parity = config.parity;
+        _flowControl = config.flowControl;
+        _configLoaded = true;
+      }
+    }
 
     return Card(
       child: Padding(
@@ -136,7 +154,14 @@ class _SerialConfigPanelState extends ConsumerState<SerialConfigPanel> {
   }
 
   Widget _buildPortDropdown(List<String> ports, bool isConnected) {
+    // Ensure selected port is in the list, otherwise reset to null
+    final validSelectedPort = ports.contains(_selectedPort)
+        ? _selectedPort
+        : null;
+
     return DropdownButtonFormField<String>(
+      key: ValueKey('port_$validSelectedPort'),
+      initialValue: validSelectedPort,
       decoration: const InputDecoration(
         labelText: '串口',
         border: OutlineInputBorder(),
@@ -193,6 +218,8 @@ class _SerialConfigPanelState extends ConsumerState<SerialConfigPanel> {
     required void Function(int) onChanged,
   }) {
     return DropdownButtonFormField<int>(
+      key: ValueKey('${label}_$currentValue'),
+      initialValue: currentValue,
       decoration: InputDecoration(
         labelText: label,
         border: const OutlineInputBorder(),
@@ -214,6 +241,8 @@ class _SerialConfigPanelState extends ConsumerState<SerialConfigPanel> {
 
   Widget _buildParityDropdown(bool isConnected) {
     return DropdownButtonFormField<Parity>(
+      key: ValueKey('parity_${_parity.value}'),
+      initialValue: _parity,
       decoration: const InputDecoration(
         labelText: '校验位',
         border: OutlineInputBorder(),
@@ -239,6 +268,8 @@ class _SerialConfigPanelState extends ConsumerState<SerialConfigPanel> {
 
   Widget _buildFlowControlDropdown(bool isConnected) {
     return DropdownButtonFormField<FlowControl>(
+      key: ValueKey('flowControl_${_flowControl.value}'),
+      initialValue: _flowControl,
       decoration: const InputDecoration(
         labelText: '流控',
         border: OutlineInputBorder(),
@@ -281,6 +312,9 @@ class _SerialConfigPanelState extends ConsumerState<SerialConfigPanel> {
           flowControl: _flowControl,
         );
         await connectionNotifier.connect(config);
+
+        // Save config on successful connection
+        await ref.read(savedConfigProvider.notifier).saveConfig(config);
       }
     } catch (e) {
       if (context.mounted) {

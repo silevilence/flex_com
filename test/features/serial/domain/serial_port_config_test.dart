@@ -167,4 +167,117 @@ void main() {
       expect(FlowControl.software.displayName, 'XON/XOFF');
     });
   });
+
+  group('JSON serialization', () {
+    test('toJson creates correct map', () {
+      const config = SerialPortConfig(
+        portName: 'COM3',
+        baudRate: 115200,
+        dataBits: 8,
+        stopBits: 1,
+        parity: Parity.none,
+        flowControl: FlowControl.hardware,
+      );
+
+      final json = config.toJson();
+
+      expect(json['portName'], equals('COM3'));
+      expect(json['baudRate'], equals(115200));
+      expect(json['dataBits'], equals(8));
+      expect(json['stopBits'], equals(1));
+      expect(json['parity'], equals(0));
+      expect(json['flowControl'], equals(1));
+    });
+
+    test('fromJson creates correct config', () {
+      final json = {
+        'portName': 'COM5',
+        'baudRate': 9600,
+        'dataBits': 7,
+        'stopBits': 2,
+        'parity': 2,
+        'flowControl': 2,
+      };
+
+      final config = SerialPortConfig.fromJson(json);
+
+      expect(config.portName, equals('COM5'));
+      expect(config.baudRate, equals(9600));
+      expect(config.dataBits, equals(7));
+      expect(config.stopBits, equals(2));
+      expect(config.parity, equals(Parity.even));
+      expect(config.flowControl, equals(FlowControl.software));
+    });
+
+    test('fromJson uses defaults for missing fields', () {
+      final json = <String, dynamic>{'portName': 'COM1'};
+
+      final config = SerialPortConfig.fromJson(json);
+
+      expect(config.portName, equals('COM1'));
+      expect(config.baudRate, equals(9600));
+      expect(config.dataBits, equals(8));
+      expect(config.stopBits, equals(1));
+      expect(config.parity, equals(Parity.none));
+      expect(config.flowControl, equals(FlowControl.none));
+    });
+
+    test('fromJson handles null portName', () {
+      final json = <String, dynamic>{};
+
+      final config = SerialPortConfig.fromJson(json);
+
+      expect(config.portName, equals(''));
+    });
+
+    test('fromJson handles invalid parity value', () {
+      final json = {'portName': 'COM1', 'parity': 99};
+
+      final config = SerialPortConfig.fromJson(json);
+
+      expect(config.parity, equals(Parity.none));
+    });
+
+    test('fromJson handles invalid flowControl value', () {
+      final json = {'portName': 'COM1', 'flowControl': 99};
+
+      final config = SerialPortConfig.fromJson(json);
+
+      expect(config.flowControl, equals(FlowControl.none));
+    });
+
+    test('roundtrip serialization preserves data', () {
+      const original = SerialPortConfig(
+        portName: 'COM10',
+        baudRate: 921600,
+        dataBits: 7,
+        stopBits: 2,
+        parity: Parity.odd,
+        flowControl: FlowControl.dtrDsr,
+      );
+
+      final json = original.toJson();
+      final restored = SerialPortConfig.fromJson(json);
+
+      expect(restored, equals(original));
+    });
+
+    test('all parity values can be serialized', () {
+      for (final parity in Parity.values) {
+        final config = SerialPortConfig(portName: 'COM1', parity: parity);
+        final json = config.toJson();
+        final restored = SerialPortConfig.fromJson(json);
+        expect(restored.parity, equals(parity));
+      }
+    });
+
+    test('all flowControl values can be serialized', () {
+      for (final fc in FlowControl.values) {
+        final config = SerialPortConfig(portName: 'COM1', flowControl: fc);
+        final json = config.toJson();
+        final restored = SerialPortConfig.fromJson(json);
+        expect(restored.flowControl, equals(fc));
+      }
+    });
+  });
 }

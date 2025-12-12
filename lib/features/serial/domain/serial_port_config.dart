@@ -168,4 +168,34 @@ class SerialPortConfig extends Equatable {
         'dataBits: $dataBits, stopBits: $stopBits, parity: $parity, '
         'flowControl: $flowControl)';
   }
+
+  /// Converts this configuration to a JSON map.
+  Map<String, dynamic> toJson() {
+    return {
+      'portName': portName,
+      'baudRate': baudRate,
+      'dataBits': dataBits,
+      'stopBits': stopBits,
+      'parity': parity.value,
+      'flowControl': flowControl.value,
+    };
+  }
+
+  /// Creates a configuration from a JSON map.
+  factory SerialPortConfig.fromJson(Map<String, dynamic> json) {
+    return SerialPortConfig(
+      portName: json['portName'] as String? ?? '',
+      baudRate: json['baudRate'] as int? ?? 9600,
+      dataBits: json['dataBits'] as int? ?? 8,
+      stopBits: json['stopBits'] as int? ?? 1,
+      parity: Parity.values.firstWhere(
+        (p) => p.value == (json['parity'] as int? ?? 0),
+        orElse: () => Parity.none,
+      ),
+      flowControl: FlowControl.values.firstWhere(
+        (fc) => fc.value == (json['flowControl'] as int? ?? 0),
+        orElse: () => FlowControl.none,
+      ),
+    );
+  }
 }
