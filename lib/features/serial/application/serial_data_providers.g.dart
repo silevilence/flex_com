@@ -50,7 +50,7 @@ final class SerialDataLogProvider
   }
 }
 
-String _$serialDataLogHash() => r'ad7fef800638af19fd45a0a4a48e97d596d39bc0';
+String _$serialDataLogHash() => r'85add0188ec480b0d9d89d43f5361fda3ce22d68';
 
 /// Notifier that manages the list of serial data entries.
 ///

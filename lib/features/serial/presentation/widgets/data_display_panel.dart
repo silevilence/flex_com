@@ -1,7 +1,12 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../application/data_log_service.dart';
+import '../../application/display_settings_providers.dart';
 import '../../application/serial_data_providers.dart';
 import '../../domain/serial_data_entry.dart';
 
@@ -18,6 +23,7 @@ class DataDisplayPanel extends ConsumerStatefulWidget {
 class _DataDisplayPanelState extends ConsumerState<DataDisplayPanel> {
   final ScrollController _scrollController = ScrollController();
   bool _autoScroll = true;
+  final DataLogService _logService = DataLogService();
 
   @override
   void dispose() {
@@ -36,6 +42,56 @@ class _DataDisplayPanelState extends ConsumerState<DataDisplayPanel> {
           );
         }
       });
+    }
+  }
+
+  Future<void> _saveLog({required bool asBinary}) async {
+    final entries = ref.read(serialDataLogProvider);
+    if (entries.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('没有数据可保存')));
+      }
+      return;
+    }
+
+    final displayMode = ref.read(dataDisplayModeProvider);
+    final defaultFileName = _logService.generateFileName(isBinary: asBinary);
+
+    final result = await FilePicker.platform.saveFile(
+      dialogTitle: asBinary ? '保存二进制日志' : '保存文本日志',
+      fileName: defaultFileName,
+      type: FileType.custom,
+      allowedExtensions: asBinary ? ['bin'] : ['txt', 'log'],
+    );
+
+    if (result == null) return;
+
+    try {
+      if (asBinary) {
+        await _logService.saveAsBinary(entries, result);
+      } else {
+        await _logService.saveAsText(
+          entries,
+          result,
+          asHex: displayMode == DataDisplayMode.hex,
+        );
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('日志已保存: ${File(result).uri.pathSegments.last}'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('保存失败: $e')));
+      }
     }
   }
 
@@ -74,6 +130,8 @@ class _DataDisplayPanelState extends ConsumerState<DataDisplayPanel> {
     DataDisplayMode displayMode,
     int entryCount,
   ) {
+    final displaySettings = ref.watch(displaySettingsProvider);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
@@ -102,6 +160,38 @@ class _DataDisplayPanelState extends ConsumerState<DataDisplayPanel> {
             style: const ButtonStyle(visualDensity: VisualDensity.compact),
           ),
           const SizedBox(width: 8),
+          // Timestamp toggle
+          IconButton(
+            onPressed: () {
+              ref.read(displaySettingsProvider.notifier).toggleTimestamp();
+            },
+            icon: Icon(
+              displaySettings.showTimestamp
+                  ? Icons.access_time_filled
+                  : Icons.access_time,
+            ),
+            tooltip: displaySettings.showTimestamp ? '时间戳已开启' : '时间戳已关闭',
+            style: IconButton.styleFrom(
+              backgroundColor: displaySettings.showTimestamp
+                  ? Theme.of(context).colorScheme.primaryContainer
+                  : null,
+            ),
+          ),
+          // Auto wrap toggle
+          IconButton(
+            onPressed: () {
+              ref.read(displaySettingsProvider.notifier).toggleAutoWrap();
+            },
+            icon: Icon(
+              displaySettings.autoWrap ? Icons.wrap_text : Icons.notes,
+            ),
+            tooltip: displaySettings.autoWrap ? '自动换行已开启' : '自动换行已关闭',
+            style: IconButton.styleFrom(
+              backgroundColor: displaySettings.autoWrap
+                  ? Theme.of(context).colorScheme.primaryContainer
+                  : null,
+            ),
+          ),
           // Auto scroll toggle
           IconButton(
             onPressed: () {
@@ -119,6 +209,41 @@ class _DataDisplayPanelState extends ConsumerState<DataDisplayPanel> {
                   ? Theme.of(context).colorScheme.primaryContainer
                   : null,
             ),
+          ),
+          // Save log button with menu
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.save_alt),
+            tooltip: '保存日志',
+            onSelected: (value) {
+              switch (value) {
+                case 'txt':
+                  _saveLog(asBinary: false);
+                case 'bin':
+                  _saveLog(asBinary: true);
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'txt',
+                child: Row(
+                  children: [
+                    Icon(Icons.description_outlined),
+                    SizedBox(width: 8),
+                    Text('保存为文本 (.txt)'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'bin',
+                child: Row(
+                  children: [
+                    Icon(Icons.code),
+                    SizedBox(width: 8),
+                    Text('保存为二进制 (.bin)'),
+                  ],
+                ),
+              ),
+            ],
           ),
           // Clear button
           IconButton(
@@ -167,13 +292,20 @@ class _DataDisplayPanelState extends ConsumerState<DataDisplayPanel> {
     List<SerialDataEntry> entries,
     DataDisplayMode displayMode,
   ) {
+    final displaySettings = ref.watch(displaySettingsProvider);
+
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.all(8),
       itemCount: entries.length,
       itemBuilder: (context, index) {
         final entry = entries[index];
-        return _DataEntryTile(entry: entry, displayMode: displayMode);
+        return _DataEntryTile(
+          entry: entry,
+          displayMode: displayMode,
+          showTimestamp: displaySettings.showTimestamp,
+          autoWrap: displaySettings.autoWrap,
+        );
       },
     );
   }
@@ -181,10 +313,17 @@ class _DataDisplayPanelState extends ConsumerState<DataDisplayPanel> {
 
 /// Widget that displays a single data entry.
 class _DataEntryTile extends StatelessWidget {
-  const _DataEntryTile({required this.entry, required this.displayMode});
+  const _DataEntryTile({
+    required this.entry,
+    required this.displayMode,
+    required this.showTimestamp,
+    required this.autoWrap,
+  });
 
   final SerialDataEntry entry;
   final DataDisplayMode displayMode;
+  final bool showTimestamp;
+  final bool autoWrap;
 
   static final _timeFormat = DateFormat('HH:mm:ss.SSS');
 
@@ -210,15 +349,17 @@ class _DataEntryTile extends StatelessWidget {
           // Direction icon
           Icon(directionIcon, size: 16, color: directionColor),
           const SizedBox(width: 4),
-          // Timestamp
-          Text(
-            _timeFormat.format(entry.timestamp),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontFamily: 'monospace',
+          // Timestamp (conditional)
+          if (showTimestamp) ...[
+            Text(
+              _timeFormat.format(entry.timestamp),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontFamily: 'monospace',
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
+            const SizedBox(width: 8),
+          ],
           // Direction label
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
@@ -237,12 +378,22 @@ class _DataEntryTile extends StatelessWidget {
           const SizedBox(width: 8),
           // Data
           Expanded(
-            child: SelectableText(
-              dataText,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
-            ),
+            child: autoWrap
+                ? SelectableText(
+                    dataText,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
+                  )
+                : SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SelectableText(
+                      dataText,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
+                    ),
+                  ),
           ),
           // Byte count
           Text(

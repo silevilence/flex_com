@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../domain/serial_data_entry.dart';
+import 'display_settings_providers.dart';
 import 'serial_providers.dart';
 
 part 'serial_data_providers.g.dart';
@@ -40,6 +41,13 @@ class SerialDataLog extends _$SerialDataLog {
   }
 
   void _addEntry(SerialDataEntry entry) {
+    // Update byte counter
+    if (entry.direction == DataDirection.received) {
+      ref.read(byteCounterProvider.notifier).addRxBytes(entry.data.length);
+    } else {
+      ref.read(byteCounterProvider.notifier).addTxBytes(entry.data.length);
+    }
+
     final newState = [...state, entry];
     // Limit entries to prevent memory issues
     if (newState.length > _maxEntries) {
