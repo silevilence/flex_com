@@ -105,7 +105,7 @@ final class CyclicSendControllerProvider
 }
 
 String _$cyclicSendControllerHash() =>
-    r'ddbdd694c6eb461ab95c0c59832a0b1c9dbdb739';
+    r'5d1a175b2cb19eed52a51b562b2d1b547d0f43d2';
 
 /// 循环发送控制器
 
@@ -121,6 +121,76 @@ abstract class _$CyclicSendController extends $Notifier<CyclicSendState> {
             as $ClassProviderElement<
               AnyNotifier<CyclicSendState, CyclicSendState>,
               CyclicSendState,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
+}
+
+/// 发送面板控制器
+///
+/// 用于从外部（如指令列表）触发发送操作
+
+@ProviderFor(SendPanelController)
+const sendPanelControllerProvider = SendPanelControllerProvider._();
+
+/// 发送面板控制器
+///
+/// 用于从外部（如指令列表）触发发送操作
+final class SendPanelControllerProvider
+    extends $NotifierProvider<SendPanelController, SendPanelControllerState> {
+  /// 发送面板控制器
+  ///
+  /// 用于从外部（如指令列表）触发发送操作
+  const SendPanelControllerProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'sendPanelControllerProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$sendPanelControllerHash();
+
+  @$internal
+  @override
+  SendPanelController create() => SendPanelController();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SendPanelControllerState value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SendPanelControllerState>(value),
+    );
+  }
+}
+
+String _$sendPanelControllerHash() =>
+    r'acab93c5ad80c2808b75cf4c59adec88749dd6fe';
+
+/// 发送面板控制器
+///
+/// 用于从外部（如指令列表）触发发送操作
+
+abstract class _$SendPanelController
+    extends $Notifier<SendPanelControllerState> {
+  SendPanelControllerState build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref =
+        this.ref as $Ref<SendPanelControllerState, SendPanelControllerState>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<SendPanelControllerState, SendPanelControllerState>,
+              SendPanelControllerState,
               Object?,
               Object?
             >;

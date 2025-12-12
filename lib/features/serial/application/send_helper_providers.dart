@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/utils/checksum_utils.dart';
 import '../../../core/utils/hex_utils.dart';
+import '../../commands/domain/command.dart';
 import '../domain/send_settings.dart';
 import '../domain/serial_data_entry.dart';
 import 'serial_data_providers.dart';
@@ -221,4 +222,82 @@ Uint8List processSendData(Uint8List data, SendSettings settings) {
   }
 
   return result;
+}
+
+/// 发送面板控制器状态
+class SendPanelControllerState {
+  const SendPanelControllerState({this.lastError, this.isSending = false});
+
+  final String? lastError;
+  final bool isSending;
+
+  SendPanelControllerState copyWith({
+    String? lastError,
+    bool? isSending,
+    bool clearError = false,
+  }) {
+    return SendPanelControllerState(
+      lastError: clearError ? null : (lastError ?? this.lastError),
+      isSending: isSending ?? this.isSending,
+    );
+  }
+}
+
+/// 发送面板控制器
+///
+/// 用于从外部（如指令列表）触发发送操作
+@Riverpod(keepAlive: true)
+class SendPanelController extends _$SendPanelController {
+  @override
+  SendPanelControllerState build() {
+    return const SendPanelControllerState();
+  }
+
+  /// 发送指令
+  Future<bool> sendCommand(Command command) async {
+    final connectionState = ref.read(serialConnectionProvider);
+    if (!connectionState.isConnected) {
+      state = state.copyWith(lastError: '串口未打开');
+      return false;
+    }
+
+    Uint8List? data;
+    try {
+      if (command.mode == DataDisplayMode.hex) {
+        data = HexUtils.hexStringToBytes(command.data);
+      } else {
+        data = HexUtils.asciiStringToBytes(command.data);
+      }
+    } on FormatException catch (e) {
+      state = state.copyWith(lastError: '格式错误: ${e.message}');
+      return false;
+    }
+
+    if (data.isEmpty) {
+      state = state.copyWith(lastError: '发送数据为空');
+      return false;
+    }
+
+    // 处理数据（追加换行符、校验等）
+    final settings = ref.read(sendSettingsProvider);
+    data = processSendData(data, settings);
+
+    state = state.copyWith(isSending: true, clearError: true);
+
+    try {
+      await ref.read(serialConnectionProvider.notifier).sendData(data);
+      // Add to log
+      ref.read(serialDataLogProvider.notifier).addSentData(data);
+      state = state.copyWith(isSending: false);
+      return true;
+    } catch (e) {
+      state = state.copyWith(isSending: false, lastError: '发送失败: $e');
+      return false;
+    }
+  }
+
+  /// 清除错误
+  void clearError() {
+    state = state.copyWith(clearError: true);
+  }
 }
