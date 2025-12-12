@@ -28,10 +28,14 @@ void main() {
     // Verify that the app is initialized correctly with title.
     expect(find.text('FlexCom'), findsOneWidget);
 
-    // Verify that the serial config panel is rendered.
+    // Verify that the serial config panel is rendered (now in sidebar header).
     expect(find.text('串口配置'), findsOneWidget);
 
-    // Verify that the command list panel is rendered.
+    // Verify that the command list panel is available in bottom panel tabs.
     expect(find.text('指令列表'), findsOneWidget);
+
+    // Verify the dockable panel tabs are rendered
+    expect(find.text('脚本控制'), findsOneWidget);
+    expect(find.text('波形图'), findsOneWidget);
   });
 }
