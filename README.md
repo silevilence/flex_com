@@ -1,16 +1,68 @@
-# flex_com
+# FlexCom
 
-A new Flutter project.
+![Flutter](https://img.shields.io/badge/Flutter-3.35+-02569B?logo=flutter)
+![Dart](https://img.shields.io/badge/Dart-3.9+-0175C2?logo=dart)
+![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-## Getting Started
+> 🔌 现代化、跨平台的串口调试助手
 
-This project is a starting point for a Flutter application.
+## 简介
 
-A few resources to get you started if this is your first Flutter project:
+**FlexCom** 是一个基于 Flutter 开发的串口调试工具，专为嵌入式开发者和硬件调试人员设计。采用 Isolate 架构确保串口 I/O 操作不阻塞 UI，提供流畅的用户体验。
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## ✨ 功能特性
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### 已实现
+- 🔧 **串口配置面板** - 完整的串口参数配置
+  - 串口选择与刷新
+  - 波特率 (300 ~ 921600)
+  - 数据位 (5/6/7/8)
+  - 停止位 (1/2)
+  - 校验位 (None/Odd/Even/Mark/Space)
+  - 流控 (None/RTS-CTS/XON-XOFF/DTR-DSR)
+- ⚡ **Isolate 架构** - 串口操作在独立线程运行，UI 永不卡顿
+- 🎨 **Material 3 设计** - 现代化 UI，支持亮/暗主题
+
+### 规划中
+- 📥 基础收发功能 (Hex/ASCII 模式)
+- 📊 数据日志与导出
+- ⏱️ 定时发送
+- 🔢 多条指令管理
+- 📈 数据波形可视化
+
+## 🚀 快速开始
+
+### 环境要求
+- Flutter 3.35+
+- Dart 3.9+
+- Windows 10/11
+
+### 安装运行
+
+```bash
+# 克隆仓库
+git clone https://github.com/silevilence/flex_com.git
+cd flex_com
+
+# 获取依赖
+flutter pub get
+
+# 运行应用
+flutter run -d windows
+```
+
+## 🛠️ 技术栈
+
+| 类别 | 技术 |
+|------|------|
+| 框架 | Flutter |
+| 语言 | Dart |
+| 状态管理 | Riverpod |
+| 串口通信 | flutter_libserialport |
+| 数据库 | Isar |
+| 架构 | Feature-first + Repository Pattern |
+
+## 📄 License
+
+MIT License - 详见 [LICENSE](LICENSE) 文件

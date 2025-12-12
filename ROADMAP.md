@@ -3,12 +3,6 @@
 ## 📝 计划中 (Planned)
 > 待开发的需求池，按优先级排序
 
-- [ ] 🔴 **[P0] 串口核心管理 (Serial Core)**
-    - [ ] 实现后台 Isolate 串口服务框架
-    - [ ] 串口列表自动扫描与刷新
-    - [ ] 串口参数配置 (波特率, 数据位, 停止位, 校验位, 流控)
-    - [ ] 串口打开/关闭状态管理与错误处理
-
 - [ ] 🔴 **[P0] 基础收发功能 (Basic I/O)**
     - [ ] **接收区**: 实时显示数据流
     - [ ] **接收区**: 支持 Hex (十六进制) 与 ASCII 文本模式切换
@@ -36,6 +30,10 @@
     - [ ] 独立校验计算器窗口 (CRC16/32, XOR, Sum 等)
     - [ ] 简易自动回复 (根据接收到的特定 Hex 自动回复预设 Hex)
 
+- [ ] 🟢 **[P2] DTR/DSR 流控实现**
+    - [ ] 使用 SerialPort.signals API 手动控制 DTR 引脚
+    - [ ] 实现 DTR/DSR 握手流控逻辑
+
 - [ ] 🟢 **[P2] 脚本化与扩展 (Flexibility)**
     - [ ] **脚本引擎集成**: 引入 Lua 或 Dart Script 环境
     - [ ] **Hook 实现**: 实现 `onReceive` 数据拦截接口
@@ -50,6 +48,16 @@
 ## ✅ 已完成 (Completed)
 > 已验收通过的功能
 
+- [x] 🔴 **[P0] 串口配置 UI (Serial Config UI)**
+    - [x] 串口选择下拉框（含刷新按钮）
+    - [x] 波特率/数据位/停止位/校验位配置控件
+    - [x] 打开/关闭串口按钮与状态指示
+    - [x] 流控参数支持 (RTS/CTS, XON/XOFF, DTR/DSR 选项已添加)
+- [x] 🔴 **[P0] 串口核心管理 (Serial Core) - 基础架构**
+    - [x] 实现后台 Isolate 串口服务框架
+    - [x] 串口列表自动扫描 API
+    - [x] 串口打开/关闭状态管理与错误处理
+    - [x] SerialPortConfig 数据模型 (波特率, 数据位, 停止位, 校验位)
 - [x] 🔴 **[P0] 项目初始化 (Project Init)**
     - [x] 配置 `pubspec.yaml` (libserialport, riverpod, isar 等核心依赖)
     - [x] 建立 Feature-first 目录结构
