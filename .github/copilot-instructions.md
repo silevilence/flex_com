@@ -58,6 +58,18 @@
   - 💄 `style`: 代码格式、UI 样式微调
 - **推送规则**: 你只生成 commit 命令或消息，**由我手动执行 push**。
 
+## 6. Project Structure Standard (Feature-first)
+项目严格遵循 Feature-first 架构。开发新功能时，必须保持此结构整洁。
+- `lib/core/`: 通用组件 (Constants, Theme, Utils, Shared Widgets).
+- `lib/features/`: 业务模块 (按功能分包).
+    - `<feature_name>/domain/`: 实体 (Entities), 状态类 (States).
+    - `<feature_name>/data/`: 数据源 (DataSources), 仓库实现 (RepositoryImpls), DTOs.
+    - `<feature_name>/application/`: 业务逻辑 (Providers, Notifiers, Services).
+    - `<feature_name>/presentation/`: UI 组件 (Widgets, Pages, Controllers).
+- `lib/main.dart`: 应用入口.
+
+**维护规则**: 每次引入新的顶层文件夹或重构结构后，必须同步更新本章节。
+
 ---
 
 # Documentation Standards
