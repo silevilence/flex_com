@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/hex_utils.dart';
+import '../../../checksum_calculator/domain/calculator_state.dart';
+import '../../../checksum_calculator/presentation/checksum_calculator_dialog.dart';
 import '../../application/send_helper_providers.dart';
 import '../../application/serial_data_providers.dart';
 import '../../application/serial_providers.dart';
@@ -144,6 +146,39 @@ class _SendPanelState extends ConsumerState<SendPanel> {
     }
   }
 
+  /// 切换发送模式并自动转换数据
+  void _switchSendModeAndConvert(
+    DataDisplayMode currentMode,
+    DataDisplayMode newMode,
+  ) {
+    if (currentMode == newMode) return;
+
+    final currentText = _sendController.text;
+    String convertedText = '';
+
+    if (currentText.isNotEmpty) {
+      try {
+        if (newMode == DataDisplayMode.ascii) {
+          // HEX -> ASCII
+          final bytes = HexUtils.hexStringToBytes(currentText);
+          convertedText = String.fromCharCodes(bytes);
+        } else {
+          // ASCII -> HEX
+          final bytes = HexUtils.asciiStringToBytes(currentText);
+          convertedText = HexUtils.bytesToHexString(bytes);
+        }
+        _sendController.text = convertedText;
+      } catch (_) {
+        // 转换失败时保留原文本
+      }
+    }
+
+    ref.read(sendModeProvider.notifier).setMode(newMode);
+    setState(() {
+      _errorMessage = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final connectionState = ref.watch(serialConnectionProvider);
@@ -168,21 +203,17 @@ class _SendPanelState extends ConsumerState<SendPanel> {
                 SegmentedButton<DataDisplayMode>(
                   segments: const [
                     ButtonSegment(
-                      value: DataDisplayMode.ascii,
-                      label: Text('ASCII'),
-                    ),
-                    ButtonSegment(
                       value: DataDisplayMode.hex,
                       label: Text('HEX'),
+                    ),
+                    ButtonSegment(
+                      value: DataDisplayMode.ascii,
+                      label: Text('ASCII'),
                     ),
                   ],
                   selected: {sendMode},
                   onSelectionChanged: (selected) {
-                    ref.read(sendModeProvider.notifier).setMode(selected.first);
-                    // Clear error when mode changes
-                    setState(() {
-                      _errorMessage = null;
-                    });
+                    _switchSendModeAndConvert(sendMode, selected.first);
                   },
                   style: const ButtonStyle(
                     visualDensity: VisualDensity.compact,
@@ -402,7 +433,64 @@ class _SendPanelState extends ConsumerState<SendPanel> {
             ],
           ],
         ),
+
+        // 校验计算器按钮
+        TextButton.icon(
+          onPressed: cyclicState.isRunning ? null : _openChecksumCalculator,
+          icon: const Icon(Icons.calculate_outlined, size: 18),
+          label: const Text('计算器'),
+          style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+        ),
       ],
+    );
+  }
+
+  /// 打开校验计算器
+  void _openChecksumCalculator() {
+    // 获取当前发送框的数据和模式
+    final sendMode = ref.read(sendModeProvider);
+    final currentText = _sendController.text;
+
+    // 将发送模式转换为计算器的 InputFormat
+    final initialFormat = sendMode == DataDisplayMode.hex
+        ? InputFormat.hex
+        : InputFormat.ascii;
+
+    ChecksumCalculatorDialog.show(
+      context,
+      initialData: currentText,
+      initialFormat: initialFormat,
+      onAppendResult: (hexResult) {
+        // 将结果附加到发送框
+        final currentText = _sendController.text;
+        final sendMode = ref.read(sendModeProvider);
+
+        if (sendMode == DataDisplayMode.hex) {
+          // Hex 模式直接附加
+          if (currentText.isEmpty) {
+            _sendController.text = hexResult;
+          } else {
+            _sendController.text = '$currentText $hexResult';
+          }
+        } else {
+          // ASCII 模式需要提示用户切换到 Hex 模式
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('已切换到 HEX 模式并附加校验结果'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+          ref.read(sendModeProvider.notifier).setMode(DataDisplayMode.hex);
+          // 将当前 ASCII 内容转换为 Hex 后附加
+          try {
+            final currentBytes = HexUtils.asciiStringToBytes(currentText);
+            final currentHex = HexUtils.bytesToHexString(currentBytes);
+            _sendController.text = '$currentHex $hexResult';
+          } catch (_) {
+            _sendController.text = hexResult;
+          }
+        }
+      },
     );
   }
 }
