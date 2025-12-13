@@ -4,11 +4,11 @@
 # Tech Stack & Libraries
 - **Framework**: Flutter (Latest Stable)
 - **Language**: Dart
-- **State Management**: `flutter_riverpod` (必须使用，严禁混用 GetX 或 Provider)
+- **State Management**: `flutter_riverpod`, `riverpod_annotation` (必须使用，严禁混用 GetX 或 Provider)
 - **Serial Port**: `flutter_libserialport`
-- **Database**: `isar` (用于存储历史记录、指令列表)
-- **Utils**: `equatable` (对象比较), `intl` (时间格式化)
-- **Testing**: `flutter_test`, `mockito`
+- **Utils**: `equatable` (对象比较), `intl` (时间格式化), `crypto` (加密算法), `file_picker` (文件选择), `multi_split_view` (多区域布局)
+- **Testing**: `flutter_test`
+- **Build Tools**: `build_runner`, `riverpod_generator`, `freezed`, `flutter_lints`
 - **Architecture**: Feature-first architecture + Repository Pattern.
 - **Concurrency**: 串口读取与协议解析必须在单独的 `Isolate` 中运行，禁止阻塞 UI 线程。
 
