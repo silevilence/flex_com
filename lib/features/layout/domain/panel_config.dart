@@ -65,6 +65,14 @@ class PanelConfigs {
     defaultLocation: PanelLocation.right,
   );
 
+  /// 自动回复面板
+  static const autoReply = PanelConfig(
+    id: 'autoReply',
+    title: '自动回复',
+    icon: Icons.reply_all,
+    defaultLocation: PanelLocation.right,
+  );
+
   /// 脚本控制面板
   static const scripts = PanelConfig(
     id: 'scripts',
@@ -82,7 +90,13 @@ class PanelConfigs {
   );
 
   /// 所有面板配置列表
-  static const List<PanelConfig> all = [serial, commands, scripts, chart];
+  static const List<PanelConfig> all = [
+    serial,
+    commands,
+    autoReply,
+    scripts,
+    chart,
+  ];
 
   /// 根据 ID 获取面板配置
   static PanelConfig? getById(String id) {

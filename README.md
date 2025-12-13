@@ -63,7 +63,6 @@ flutter run -d windows
 | 语言 | Dart |
 | 状态管理 | Riverpod |
 | 串口通信 | flutter_libserialport |
-| 数据库 | Isar |
 | 架构 | Feature-first + Repository Pattern |
 
 ## 📄 License

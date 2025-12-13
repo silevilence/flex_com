@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multi_split_view/multi_split_view.dart';
 
+import '../../../auto_reply/presentation/widgets/auto_reply_panel.dart';
 import '../../../commands/presentation/widgets/command_list_panel.dart';
 import '../../../serial/application/send_helper_providers.dart';
 import '../../../serial/presentation/widgets/compact_serial_config_panel.dart';
@@ -206,6 +207,11 @@ class _MultiZoneLayoutState extends ConsumerState<MultiZoneLayout> {
                   .sendCommand(command);
             },
           ),
+        );
+      case 'autoReply':
+        return const Padding(
+          padding: EdgeInsets.all(8),
+          child: AutoReplyPanel(),
         );
       case 'scripts':
         return _buildPlaceholderContent(

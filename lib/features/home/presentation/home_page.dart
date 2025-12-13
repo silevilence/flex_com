@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../auto_reply/application/auto_reply_engine.dart';
 import '../../layout/presentation/widgets/activity_bar.dart';
 import '../../layout/presentation/widgets/multi_zone_layout.dart';
 import '../../serial/presentation/widgets/status_bar.dart';
@@ -16,6 +17,9 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // 初始化自动回复引擎（读取一次以激活 Provider）
+    ref.watch(autoReplyEngineProvider);
+
     return Scaffold(
       body: Column(
         children: [

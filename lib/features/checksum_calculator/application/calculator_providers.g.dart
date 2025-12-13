@@ -97,7 +97,7 @@ final class CalculatorNotifierProvider
 }
 
 String _$calculatorNotifierHash() =>
-    r'1b81820a4cc2e151f0f831a78cf0e4b5b2008b43';
+    r'7cf5d937f0883a3c09d3415020c6f0d9d9e57ae3';
 
 /// 计算器状态管理
 
