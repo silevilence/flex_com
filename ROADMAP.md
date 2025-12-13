@@ -16,11 +16,11 @@
 - [ ] 🟢 **[P2] 高级脚本回复 (Script-based Reply)**
     - [ ] **模式 3: 脚本动态回复**: 允许用户编写自定义脚本逻辑来决定回复内容。
 
+- [ ] 🟢 **[P2] 智能自动回复系统 (Smart Auto-Reply System)**
+    - [ ] **模式 3: 脚本动态回复 (Script-based Reply)**: 允许用户编写自定义脚本逻辑来决定回复内容。
+
 ## 🚧 开发中 (In Progress)
 > 当前正在进行的工作
-
-- [ ] 🟡 **[P1] 智能自动回复系统 (Smart Auto-Reply System)**
-    - [ ] **模式 3: 脚本动态回复 (Script-based Reply)**: 允许用户编写自定义脚本逻辑来决定回复内容。（已移至 P2 计划）
 
 ## ✅ 已完成 (Completed)
 > 已验收通过的功能
