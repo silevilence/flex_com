@@ -7,14 +7,40 @@
     - [x] 使用 SerialPort.signals API 手动控制 DTR 引脚（已实现，详见 `lib/features/serial/data/serial_isolate_service.dart`）
     - [x] 实现 DTR/DSR 握手流控逻辑（已实现，含单元测试，全部通过）
 
-- [ ] 🟢 **[P2] 脚本化与扩展 (Flexibility)**
-    - [ ] **脚本引擎集成**: 引入 Lua 或 Dart Script 环境
-    - [ ] **Hook 实现**: 实现 `onReceive` 数据拦截接口
-    - [ ] **网络扩展**: TCP Client/Server, UDP 调试模式
-    - [ ] **可视化**: 接收数据实时波形图绘制
+- [ ] 🟢 **[P2] 通用脚本系统 (General Scripting System)**
+    - [ ] **核心架构与管理 (Core & Management)**
+        - [ ] **脚本引擎**: 集成 Dart `eval` 或 Lua 环境，运行于独立的 Isolate 中以保障 UI 流畅性。
+        - [ ] **脚本管理器**: 侧边栏/面板增加脚本管理页，支持文件的增删改查及简单语法高亮编辑。
+        - [ ] **API 桥接**: 暴露 `FCom` 全局对象，提供 `send`, `log`, `delay`, `crc` 等核心能力。
+    - [ ] **Hook 挂载机制 (Hooking Mechanism)**
+        - [ ] **Pipeline Hook (数据流钩子)**: 允许将脚本挂载为“接收预处理器” (修改/解密 Rx 数据) 或“发送后处理器” (加封包/校验 Tx 数据)。
+        - [ ] **Reply Hook (应答钩子)**: 接入 P1 的自动回复系统，支持“脚本模式”，实现复杂的条件判断应答逻辑。
+        - [ ] **Task Hook (自动化任务)**: 支持手动触发脚本，用于执行一次性的发包序列或压力测试。
+    - [ ] **调试控制台**: 独立的脚本日志输出窗口，用于打印调试信息 (`print`) 和显示错误堆栈。
 
-- [ ] 🟢 **[P2] 高级脚本回复 (Script-based Reply)**
-    - [ ] **模式 3: 脚本动态回复**: 允许用户编写自定义脚本逻辑来决定回复内容。
+- [ ] 🟢 **[P2] 网络扩展 (Network Extension)**
+    - [ ] **抽象层重构**: 抽象出统一的 `IConnection` 接口，屏蔽串口与网络 Socket 的底层差异。
+    - [ ] **TCP 支持**: 实现 TCP Client (连接服务端) 和 TCP Server (本地监听) 模式。
+    - [ ] **UDP 支持**: 实现 UDP 单播与广播收发功能。
+
+- [ ] 🟢 **[P2] 通用帧协议解析引擎 (Universal Frame Parser)**
+    - [ ] **可扩展架构设计**:
+        - 定义统一的 `IProtocolParser` 接口 (包含 `parse(Uint8List frame) -> ParsedFrame`)。
+        - 采用**策略模式**管理协议库：新增协议仅需编写一个实现类 + 在枚举中注册，确保零耦合扩展。
+    - [ ] **通用解析器实现 (MVP)**:
+        - 实现一个基于配置的默认解析器。
+        - **字节提取**: 支持配置“第 M 到 N 字节”作为数据段，支持指定端序 (Little/Big Endian) 和数据类型 (Int/Float/Double)。
+        - **位域解析 (Bit-field)**: 支持在一个字节内通过掩码 (Mask) 或位索引提取 Flag 标志位。
+    - [ ] **帧结构定义 UI**: 提供图形化界面配置帧头、帧尾、校验位位置及数据段提取规则，配置可保存为 JSON。
+
+- [ ] 🟢 **[P2] 数据可视化 (Data Visualization)**
+    - [ ] **数据源绑定 (Data Binding)**:
+        - 实现与“协议解析引擎”的联动。
+        - **选择器 UI**: 允许用户从当前协议解析出的字段列表（如 "Temperature", "Voltage", "StatusBit"）中，勾选需要作为 Y 轴数据的字段。
+    - [ ] **绘图引擎集成**: 引入 `fl_chart` 或 `syncfusion_flutter_charts`。
+    - [ ] **实时示波器**:
+        - 实现多通道数据流的实时滚屏绘制。
+        - 交互功能：支持波形暂停/继续、X/Y 轴缩放、十字游标测量 (Cursor)
 
 ## 🚧 开发中 (In Progress)
 > 当前正在进行的工作
