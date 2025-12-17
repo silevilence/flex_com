@@ -48,10 +48,10 @@ class PanelConfig {
 class PanelConfigs {
   PanelConfigs._();
 
-  /// 串口配置面板（固定在左侧）
+  /// 连接配置面板（固定在左侧）
   static const serial = PanelConfig(
     id: 'serial',
-    title: '串口配置',
+    title: '连接配置',
     icon: Icons.settings_ethernet,
     defaultLocation: PanelLocation.left,
     isMovable: false,

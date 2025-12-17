@@ -40,13 +40,13 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     // Verify the Activity Bar icons are rendered (at least one of each)
-    expect(find.byIcon(Icons.settings_ethernet), findsAtLeast(1)); // 串口配置
+    expect(find.byIcon(Icons.settings_ethernet), findsAtLeast(1)); // 连接配置
     expect(find.byIcon(Icons.list_alt), findsAtLeast(1)); // 指令列表
     expect(find.byIcon(Icons.code), findsAtLeast(1)); // 脚本控制
     expect(find.byIcon(Icons.show_chart), findsAtLeast(1)); // 波形图
 
-    // Verify that the serial config panel header is rendered (default active)
-    expect(find.text('串口配置'), findsOneWidget);
+    // Verify that the connection config panel header is rendered (default active)
+    expect(find.text('连接配置'), findsOneWidget);
 
     // Verify the Scaffold is rendered
     expect(find.byType(Scaffold), findsOneWidget);

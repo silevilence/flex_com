@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/hex_utils.dart';
 import '../../../checksum_calculator/domain/calculator_state.dart';
 import '../../../checksum_calculator/presentation/checksum_calculator_dialog.dart';
+import '../../../connection/application/connection_providers.dart';
 import '../../application/send_helper_providers.dart';
 import '../../application/serial_data_providers.dart';
 import '../../application/serial_providers.dart';
@@ -51,10 +52,10 @@ class _SendPanelState extends ConsumerState<SendPanel> {
     final text = _sendController.text;
     if (text.isEmpty) return;
 
-    final connectionState = ref.read(serialConnectionProvider);
+    final connectionState = ref.read(unifiedConnectionProvider);
     if (!connectionState.isConnected) {
       setState(() {
-        _errorMessage = '串口未打开';
+        _errorMessage = '连接未建立';
       });
       return;
     }
@@ -92,7 +93,7 @@ class _SendPanelState extends ConsumerState<SendPanel> {
     });
 
     try {
-      await ref.read(serialConnectionProvider.notifier).sendData(data);
+      await ref.read(unifiedConnectionProvider.notifier).send(data);
       // Add to log
       ref.read(serialDataLogProvider.notifier).addSentData(data);
       // Clear input on successful send
@@ -181,7 +182,7 @@ class _SendPanelState extends ConsumerState<SendPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final connectionState = ref.watch(serialConnectionProvider);
+    final connectionState = ref.watch(unifiedConnectionProvider);
     final isConnected = connectionState.isConnected;
     final sendMode = ref.watch(sendModeProvider);
     final settings = ref.watch(sendSettingsProvider);
@@ -324,7 +325,7 @@ class _SendPanelState extends ConsumerState<SendPanel> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    '请先打开串口',
+                    '请先建立连接',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.error,
                     ),
