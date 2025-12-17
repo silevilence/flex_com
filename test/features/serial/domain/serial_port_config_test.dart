@@ -159,12 +159,22 @@ void main() {
       expect(FlowControl.none.value, 0);
       expect(FlowControl.hardware.value, 1);
       expect(FlowControl.software.value, 2);
+      expect(FlowControl.dtrDsr.value, 3);
     });
 
     test('should have correct display names', () {
       expect(FlowControl.none.displayName, 'None');
       expect(FlowControl.hardware.displayName, 'RTS/CTS');
       expect(FlowControl.software.displayName, 'XON/XOFF');
+      expect(FlowControl.dtrDsr.displayName, 'DTR/DSR');
+    });
+
+    test('should have all four flow control options', () {
+      expect(FlowControl.values.length, 4);
+      expect(FlowControl.values, contains(FlowControl.none));
+      expect(FlowControl.values, contains(FlowControl.hardware));
+      expect(FlowControl.values, contains(FlowControl.software));
+      expect(FlowControl.values, contains(FlowControl.dtrDsr));
     });
   });
 

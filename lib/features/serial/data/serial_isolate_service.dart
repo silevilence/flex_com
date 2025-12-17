@@ -237,8 +237,20 @@ class SerialIsolateService {
               ..baudRate = config.baudRate
               ..bits = config.dataBits
               ..stopBits = config.stopBits
-              ..parity = config.parity.value
-              ..setFlowControl(config.flowControl.value);
+              ..parity = config.parity.value;
+
+            // Handle flow control
+            // DTR/DSR flow control requires manual configuration
+            // since setFlowControl only supports none, hardware (RTS/CTS),
+            // and software (XON/XOFF)
+            if (config.flowControl == FlowControl.dtrDsr) {
+              // Set DTR for flow control and DSR for flow control
+              portConfig.dtr = SerialPortDtr.flowControl;
+              portConfig.dsr = SerialPortDsr.flowControl;
+            } else {
+              // Use standard flow control settings
+              portConfig.setFlowControl(config.flowControl.value);
+            }
 
             port!.config = portConfig;
 

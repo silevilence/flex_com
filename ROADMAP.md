@@ -3,9 +3,9 @@
 ## 📝 计划中 (Planned)
 > 待开发的需求池，按优先级排序
 
-- [ ]  **[P2] DTR/DSR 流控实现**
-    - [ ] 使用 SerialPort.signals API 手动控制 DTR 引脚
-    - [ ] 实现 DTR/DSR 握手流控逻辑
+- [x]  **[P2] DTR/DSR 流控实现**
+    - [x] 使用 SerialPort.signals API 手动控制 DTR 引脚（已实现，详见 `lib/features/serial/data/serial_isolate_service.dart`）
+    - [x] 实现 DTR/DSR 握手流控逻辑（已实现，含单元测试，全部通过）
 
 - [ ] 🟢 **[P2] 脚本化与扩展 (Flexibility)**
     - [ ] **脚本引擎集成**: 引入 Lua 或 Dart Script 环境
