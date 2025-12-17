@@ -115,3 +115,45 @@
 
 - [x] 🔴 **[P0] 基础设施搭建**
 ```
+
+## CHANGELOG Management
+
+When I request to "Update version notes [Version Number]" (e.g., "更新版本说明V1.0.0"), you must generate a changelog entry formatted for `CHANGELOG.md` following these rules:
+
+1.  **Context Awareness**:
+    *   Analyze the changes made since the *last* version recorded in `CHANGELOG.md`.
+    *   If this is the *first* version (V1.0.0), summarize all currently implemented features based on the codebase and `ROADMAP.md`.
+
+2.  **Format Structure**:
+    *   Place the new version at the **very top** of the file.
+    *   Use the format: `## [Version] - YYYY-MM-DD`.
+    *   Categorize changes using the following sections (only include sections that have content):
+        *   `### ✨ Features` (for new functionalities)
+        *   `### 🐛 Bug Fixes` (for corrections)
+        *   `### ⚡ Performance` (for optimizations, optional)
+        *   `### 🔧 Refactor` (for code structural changes, optional)
+        *   `### 📝 Documentation` (for docs/roadmap updates, optional)
+
+3.  **Content Style (面向用户)**:
+    *   **禁止使用技术术语**：不要提及类名、接口名、设计模式、文件名等开发细节。
+    *   **描述用户价值**：用「你可以做什么」而非「我们实现了什么」的视角撰写。
+    *   **简洁易懂**：使用普通用户能理解的语言，避免行话。
+    *   Use a bulleted list (`-`) for items.
+    *   Add a relevant emoji at the start of each bullet point for visual clarity.
+    *   Use Chinese.
+
+4.  **Example Output**:
+    ```markdown  
+    ## [V1.0.0] - 2023-10-27  
+    
+    🎉 **FlexCom 首个正式版本发布！**
+    
+    ### ✨ 新功能  
+    - 🧮 **校验计算器** — 内置 CRC16/32、MD5 等常用算法，一键计算校验值  
+    - 🤖 **智能自动回复** — 收到特定数据时自动发送预设响应  
+    - 🔌 **TCP/UDP 支持** — 除串口外还可通过网络连接进行调试  
+
+    ### 🐛 Bug 修复  
+    - 🩹 修复高波特率下数据显示不完整的问题  
+    - 🎨 修复暗色模式下部分文字不可见的问题  
+    ```
