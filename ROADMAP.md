@@ -3,10 +3,6 @@
 ## 📝 计划中 (Planned)
 > 待开发的需求池，按优先级排序
 
-- [x]  **[P2] DTR/DSR 流控实现**
-    - [x] 使用 SerialPort.signals API 手动控制 DTR 引脚（已实现，详见 `lib/features/serial/data/serial_isolate_service.dart`）
-    - [x] 实现 DTR/DSR 握手流控逻辑（已实现，含单元测试，全部通过）
-
 - [ ] 🟢 **[P2] 通用脚本系统 (General Scripting System)**
     - [ ] **核心架构与管理 (Core & Management)**
         - [ ] **脚本引擎**: 集成 Dart `eval` 或 Lua 环境，运行于独立的 Isolate 中以保障 UI 流畅性。
@@ -17,11 +13,6 @@
         - [ ] **Reply Hook (应答钩子)**: 接入 P1 的自动回复系统，支持“脚本模式”，实现复杂的条件判断应答逻辑。
         - [ ] **Task Hook (自动化任务)**: 支持手动触发脚本，用于执行一次性的发包序列或压力测试。
     - [ ] **调试控制台**: 独立的脚本日志输出窗口，用于打印调试信息 (`print`) 和显示错误堆栈。
-
-- [ ] 🟢 **[P2] 网络扩展 (Network Extension)**
-    - [ ] **抽象层重构**: 抽象出统一的 `IConnection` 接口，屏蔽串口与网络 Socket 的底层差异。
-    - [ ] **TCP 支持**: 实现 TCP Client (连接服务端) 和 TCP Server (本地监听) 模式。
-    - [ ] **UDP 支持**: 实现 UDP 单播与广播收发功能。
 
 - [ ] 🟢 **[P2] 通用帧协议解析引擎 (Universal Frame Parser)**
     - [ ] **可扩展架构设计**:
@@ -47,6 +38,15 @@
 
 ## ✅ 已完成 (Completed)
 > 已验收通过的功能
+
+- [x] 🟢 **[P2] 网络扩展 (Network Extension)**
+    - [x] **抽象层重构**: 抽象出统一的 `IConnection` 接口，屏蔽串口与网络 Socket 的底层差异。
+    - [x] **TCP 支持**: 实现 TCP Client (连接服务端) 和 TCP Server (本地监听) 模式。
+    - [x] **UDP 支持**: 实现 UDP 单播与广播收发功能。
+
+- [x]  **[P2] DTR/DSR 流控实现**
+    - [x] 使用 SerialPort.signals API 手动控制 DTR 引脚（已实现，详见 `lib/features/serial/data/serial_isolate_service.dart`）
+    - [x] 实现 DTR/DSR 握手流控逻辑（已实现，含单元测试，全部通过）
 
 - [x] 🟡 **[P1] 智能自动回复系统 - 基础功能 (Smart Auto-Reply System)**
     - [x] **可扩展架构**: 建立统一的回复处理器接口（策略模式）。新增回复模式只需实现 `ReplyHandler` 接口并添加枚举关联。
