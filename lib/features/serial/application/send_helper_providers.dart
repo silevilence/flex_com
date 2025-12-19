@@ -6,10 +6,10 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../core/utils/checksum_utils.dart';
 import '../../../core/utils/hex_utils.dart';
 import '../../commands/domain/command.dart';
+import '../../connection/application/connection_providers.dart';
 import '../domain/send_settings.dart';
 import '../domain/serial_data_entry.dart';
 import 'serial_data_providers.dart';
-import 'serial_providers.dart';
 
 part 'send_helper_providers.g.dart';
 
@@ -144,10 +144,10 @@ class CyclicSendController extends _$CyclicSendController {
   Future<void> _sendOnce() async {
     if (_currentData == null) return;
 
-    final connectionState = ref.read(serialConnectionProvider);
+    final connectionState = ref.read(unifiedConnectionProvider);
     if (!connectionState.isConnected) {
       stop();
-      state = state.copyWith(lastError: '串口已断开');
+      state = state.copyWith(lastError: '连接已断开');
       return;
     }
 
@@ -157,7 +157,7 @@ class CyclicSendController extends _$CyclicSendController {
       final processedData = _processData(_currentData!, settings);
 
       // 发送数据
-      await ref.read(serialConnectionProvider.notifier).sendData(processedData);
+      await ref.read(unifiedConnectionProvider.notifier).send(processedData);
 
       // 添加到日志
       ref.read(serialDataLogProvider.notifier).addSentData(processedData);
@@ -255,9 +255,9 @@ class SendPanelController extends _$SendPanelController {
 
   /// 发送指令
   Future<bool> sendCommand(Command command) async {
-    final connectionState = ref.read(serialConnectionProvider);
+    final connectionState = ref.read(unifiedConnectionProvider);
     if (!connectionState.isConnected) {
-      state = state.copyWith(lastError: '串口未打开');
+      state = state.copyWith(lastError: '连接未建立');
       return false;
     }
 
@@ -285,7 +285,7 @@ class SendPanelController extends _$SendPanelController {
     state = state.copyWith(isSending: true, clearError: true);
 
     try {
-      await ref.read(serialConnectionProvider.notifier).sendData(data);
+      await ref.read(unifiedConnectionProvider.notifier).send(data);
       // Add to log
       ref.read(serialDataLogProvider.notifier).addSentData(data);
       state = state.copyWith(isSending: false);

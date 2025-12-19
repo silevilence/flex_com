@@ -3,9 +3,9 @@ import 'dart:typed_data';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../connection/application/connection_providers.dart';
 import '../domain/serial_data_entry.dart';
 import 'display_settings_providers.dart';
-import 'serial_providers.dart';
 
 part 'serial_data_providers.g.dart';
 
@@ -21,16 +21,13 @@ class SerialDataLog extends _$SerialDataLog {
 
   @override
   List<SerialDataEntry> build() {
-    // Get repository directly and subscribe to its stream
-    final repository = ref.watch(serialRepositoryProvider);
-
-    // Cancel any existing subscription
-    _subscription?.cancel();
-
-    // Subscribe to the data stream
-    _subscription = repository.dataStream.listen((data) {
-      _addEntry(SerialDataEntry.received(data));
-    });
+    // Listen to connection state changes (not watch, to avoid rebuild)
+    ref.listen<UnifiedConnectionState>(unifiedConnectionProvider, (
+      previous,
+      next,
+    ) {
+      _handleConnectionChange(previous, next);
+    }, fireImmediately: true);
 
     ref.onDispose(() {
       _subscription?.cancel();
@@ -38,6 +35,35 @@ class SerialDataLog extends _$SerialDataLog {
     });
 
     return [];
+  }
+
+  void _handleConnectionChange(
+    UnifiedConnectionState? previous,
+    UnifiedConnectionState next,
+  ) {
+    final wasConnected = previous?.isConnected ?? false;
+    final isConnected = next.isConnected;
+
+    // Only re-subscribe when connection state actually changes
+    if (wasConnected != isConnected) {
+      _subscription?.cancel();
+      _subscription = null;
+
+      if (isConnected) {
+        final notifier = ref.read(unifiedConnectionProvider.notifier);
+        final stream = notifier.dataStream;
+        if (stream != null) {
+          _subscription = stream.listen(
+            (data) {
+              _addEntry(SerialDataEntry.received(data));
+            },
+            onError: (Object error) {
+              // Ignore stream errors to prevent crash
+            },
+          );
+        }
+      }
+    }
   }
 
   void _addEntry(SerialDataEntry entry) {

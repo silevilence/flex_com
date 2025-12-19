@@ -19,11 +19,38 @@ T? _getValueOrNull<T>(AsyncValue<T> asyncValue) {
 /// 自动回复面板
 ///
 /// 包含全局设置和两种回复模式的切换
-class AutoReplyPanel extends ConsumerWidget {
+class AutoReplyPanel extends ConsumerStatefulWidget {
   const AutoReplyPanel({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AutoReplyPanel> createState() => _AutoReplyPanelState();
+}
+
+class _AutoReplyPanelState extends ConsumerState<AutoReplyPanel> {
+  late TextEditingController _delayController;
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _delayController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _delayController.dispose();
+    super.dispose();
+  }
+
+  void _initializeControllerIfNeeded(AutoReplyConfig config) {
+    if (!_isInitialized) {
+      _delayController.text = config.globalDelayMs.toString();
+      _isInitialized = true;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final globalConfigAsync = ref.watch(autoReplyConfigProvider);
 
     return Card(
@@ -32,14 +59,17 @@ class AutoReplyPanel extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // 标题栏
-          _buildHeader(context, ref, globalConfigAsync),
+          _buildHeader(context, globalConfigAsync),
           const Divider(height: 1),
           // 内容区
           Expanded(
             child: globalConfigAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => Center(child: Text('加载失败: $error')),
-              data: (config) => _buildContent(context, ref, config),
+              data: (config) {
+                _initializeControllerIfNeeded(config);
+                return _buildContent(context, config);
+              },
             ),
           ),
         ],
@@ -49,7 +79,6 @@ class AutoReplyPanel extends ConsumerWidget {
 
   Widget _buildHeader(
     BuildContext context,
-    WidgetRef ref,
     AsyncValue<AutoReplyConfig> globalConfigAsync,
   ) {
     final theme = Theme.of(context);
@@ -94,99 +123,114 @@ class AutoReplyPanel extends ConsumerWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, WidgetRef ref, dynamic config) {
+  Widget _buildContent(BuildContext context, AutoReplyConfig config) {
     return Column(
       children: [
         // 全局设置区
-        _buildGlobalSettings(context, ref, config),
+        _buildGlobalSettings(context, config),
         const Divider(height: 1),
         // 模式切换标签
-        _buildModeTabs(context, ref, config),
+        _buildModeTabs(context, config),
         // 模式内容
         Expanded(child: _buildModeContent(context, config)),
       ],
     );
   }
 
-  Widget _buildGlobalSettings(
-    BuildContext context,
-    WidgetRef ref,
-    dynamic config,
-  ) {
+  Widget _buildGlobalSettings(BuildContext context, AutoReplyConfig config) {
     final theme = Theme.of(context);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Row(
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           // 延迟设置
-          Text('回复延迟', style: theme.textTheme.bodySmall),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 72,
-            height: 32,
-            child: TextField(
-              controller: TextEditingController(
-                text: config.globalDelayMs.toString(),
-              ),
-              decoration: const InputDecoration(
-                suffixText: 'ms',
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 8),
-                isDense: true,
-              ),
-              keyboardType: TextInputType.number,
-              style: theme.textTheme.bodySmall,
-              onSubmitted: (value) {
-                final delay = int.tryParse(value) ?? 0;
-                ref
-                    .read(autoReplyConfigProvider.notifier)
-                    .setGlobalDelay(delay);
-              },
-            ),
-          ),
-          const Spacer(),
-          // 模式选择
-          Text('模式:', style: theme.textTheme.bodySmall),
-          const SizedBox(width: 8),
-          SegmentedButton<AutoReplyMode>(
-            segments: [
-              ButtonSegment(
-                value: AutoReplyMode.matchReply,
-                label: Text(
-                  AutoReplyMode.matchReply.displayName,
-                  style: theme.textTheme.labelSmall,
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('回复延迟', style: theme.textTheme.bodySmall),
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 72,
+                height: 32,
+                child: TextField(
+                  controller: _delayController,
+                  decoration: const InputDecoration(
+                    suffixText: 'ms',
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                    isDense: true,
+                  ),
+                  keyboardType: TextInputType.number,
+                  style: theme.textTheme.bodySmall,
+                  onSubmitted: (value) {
+                    final delay = int.tryParse(value) ?? 0;
+                    ref
+                        .read(autoReplyConfigProvider.notifier)
+                        .setGlobalDelay(delay);
+                  },
+                  onChanged: (value) {
+                    // 实时保存延迟值（用户输入时）
+                    final delay = int.tryParse(value);
+                    if (delay != null) {
+                      ref
+                          .read(autoReplyConfigProvider.notifier)
+                          .setGlobalDelay(delay);
+                    }
+                  },
                 ),
-                icon: const Icon(Icons.rule, size: 16),
-              ),
-              ButtonSegment(
-                value: AutoReplyMode.sequentialReply,
-                label: Text(
-                  AutoReplyMode.sequentialReply.displayName,
-                  style: theme.textTheme.labelSmall,
-                ),
-                icon: const Icon(Icons.playlist_play, size: 16),
               ),
             ],
-            selected: {config.activeMode},
-            onSelectionChanged: (modes) {
-              ref
-                  .read(autoReplyConfigProvider.notifier)
-                  .setActiveMode(modes.first);
-            },
-            style: ButtonStyle(
-              visualDensity: VisualDensity.compact,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
+          ),
+          // 模式选择
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('模式:', style: theme.textTheme.bodySmall),
+              const SizedBox(width: 8),
+              SegmentedButton<AutoReplyMode>(
+                segments: [
+                  ButtonSegment(
+                    value: AutoReplyMode.matchReply,
+                    label: Text(
+                      AutoReplyMode.matchReply.displayName,
+                      style: theme.textTheme.labelSmall,
+                    ),
+                    icon: const Icon(Icons.rule, size: 16),
+                  ),
+                  ButtonSegment(
+                    value: AutoReplyMode.sequentialReply,
+                    label: Text(
+                      AutoReplyMode.sequentialReply.displayName,
+                      style: theme.textTheme.labelSmall,
+                    ),
+                    icon: const Icon(Icons.playlist_play, size: 16),
+                  ),
+                ],
+                selected: {config.activeMode},
+                onSelectionChanged: (modes) {
+                  ref
+                      .read(autoReplyConfigProvider.notifier)
+                      .setActiveMode(modes.first);
+                },
+                style: ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildModeTabs(BuildContext context, WidgetRef ref, dynamic config) {
+  Widget _buildModeTabs(BuildContext context, AutoReplyConfig config) {
     final theme = Theme.of(context);
-    final activeMode = config.activeMode as AutoReplyMode;
+    final activeMode = config.activeMode;
 
     return Container(
       color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
@@ -223,8 +267,8 @@ class AutoReplyPanel extends ConsumerWidget {
     );
   }
 
-  Widget _buildModeContent(BuildContext context, dynamic config) {
-    final activeMode = config.activeMode as AutoReplyMode;
+  Widget _buildModeContent(BuildContext context, AutoReplyConfig config) {
+    final activeMode = config.activeMode;
 
     switch (activeMode) {
       case AutoReplyMode.matchReply:

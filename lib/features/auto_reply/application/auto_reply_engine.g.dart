@@ -10,19 +10,19 @@ part of 'auto_reply_engine.dart';
 // ignore_for_file: type=lint, type=warning
 /// 自动回复引擎 Provider
 ///
-/// 监听串口数据流，自动处理接收到的数据并发送回复
+/// 监听连接数据流，自动处理接收到的数据并发送回复
 
 @ProviderFor(AutoReplyEngine)
 const autoReplyEngineProvider = AutoReplyEngineProvider._();
 
 /// 自动回复引擎 Provider
 ///
-/// 监听串口数据流，自动处理接收到的数据并发送回复
+/// 监听连接数据流，自动处理接收到的数据并发送回复
 final class AutoReplyEngineProvider
     extends $NotifierProvider<AutoReplyEngine, AutoReplyEngineState> {
   /// 自动回复引擎 Provider
   ///
-  /// 监听串口数据流，自动处理接收到的数据并发送回复
+  /// 监听连接数据流，自动处理接收到的数据并发送回复
   const AutoReplyEngineProvider._()
     : super(
         from: null,
@@ -50,11 +50,11 @@ final class AutoReplyEngineProvider
   }
 }
 
-String _$autoReplyEngineHash() => r'0ecf05bf0ce3dd0726dc13b4d5281b6390456383';
+String _$autoReplyEngineHash() => r'86412e475c1ad024170c33dadfd51d9b8595ef7f';
 
 /// 自动回复引擎 Provider
 ///
-/// 监听串口数据流，自动处理接收到的数据并发送回复
+/// 监听连接数据流，自动处理接收到的数据并发送回复
 
 abstract class _$AutoReplyEngine extends $Notifier<AutoReplyEngineState> {
   AutoReplyEngineState build();

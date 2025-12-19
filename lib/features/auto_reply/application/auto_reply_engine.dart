@@ -3,8 +3,8 @@ import 'dart:typed_data';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../connection/application/connection_providers.dart';
 import '../../serial/application/serial_data_providers.dart';
-import '../../serial/application/serial_providers.dart';
 import '../domain/auto_reply_config.dart';
 import '../domain/auto_reply_mode.dart';
 import '../domain/reply_handler.dart';
@@ -78,18 +78,20 @@ T? _getValueOrNull<T>(AsyncValue<T> asyncValue) {
 
 /// 自动回复引擎 Provider
 ///
-/// 监听串口数据流，自动处理接收到的数据并发送回复
+/// 监听连接数据流，自动处理接收到的数据并发送回复
 @Riverpod(keepAlive: true)
 class AutoReplyEngine extends _$AutoReplyEngine {
   StreamSubscription<Uint8List>? _subscription;
 
   @override
   AutoReplyEngineState build() {
-    // 监听串口数据流
-    final repository = ref.watch(serialRepositoryProvider);
-
-    _subscription?.cancel();
-    _subscription = repository.dataStream.listen(_onDataReceived);
+    // 监听连接状态变化（使用 listen 而非 watch，避免重建）
+    ref.listen<UnifiedConnectionState>(unifiedConnectionProvider, (
+      previous,
+      next,
+    ) {
+      _handleConnectionChange(previous, next);
+    }, fireImmediately: true);
 
     ref.onDispose(() {
       _subscription?.cancel();
@@ -97,6 +99,33 @@ class AutoReplyEngine extends _$AutoReplyEngine {
     });
 
     return const AutoReplyEngineState();
+  }
+
+  void _handleConnectionChange(
+    UnifiedConnectionState? previous,
+    UnifiedConnectionState next,
+  ) {
+    final wasConnected = previous?.isConnected ?? false;
+    final isConnected = next.isConnected;
+
+    // 只在连接状态实际变化时重新订阅
+    if (wasConnected != isConnected) {
+      _subscription?.cancel();
+      _subscription = null;
+
+      if (isConnected) {
+        final notifier = ref.read(unifiedConnectionProvider.notifier);
+        final stream = notifier.dataStream;
+        if (stream != null) {
+          _subscription = stream.listen(
+            _onDataReceived,
+            onError: (Object error) {
+              // 忽略流错误以防止崩溃
+            },
+          );
+        }
+      }
+    }
   }
 
   /// 处理接收到的数据
@@ -178,10 +207,10 @@ class AutoReplyEngine extends _$AutoReplyEngine {
 
   /// 发送回复数据
   Future<void> _sendReply(Uint8List data) async {
-    final connectionState = ref.read(serialConnectionProvider);
+    final connectionState = ref.read(unifiedConnectionProvider);
     if (!connectionState.isConnected) return;
 
-    await ref.read(serialConnectionProvider.notifier).sendData(data);
+    await ref.read(unifiedConnectionProvider.notifier).send(data);
 
     // 记录发送日志
     ref.read(serialDataLogProvider.notifier).addSentData(data);

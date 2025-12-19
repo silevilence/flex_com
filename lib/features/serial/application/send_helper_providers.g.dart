@@ -105,7 +105,7 @@ final class CyclicSendControllerProvider
 }
 
 String _$cyclicSendControllerHash() =>
-    r'5d1a175b2cb19eed52a51b562b2d1b547d0f43d2';
+    r'7a11e9982a30f666f41157a0d8af6265ee1c5474';
 
 /// 循环发送控制器
 
@@ -171,7 +171,7 @@ final class SendPanelControllerProvider
 }
 
 String _$sendPanelControllerHash() =>
-    r'acab93c5ad80c2808b75cf4c59adec88749dd6fe';
+    r'9b2a5f274c96f462fa5a09e21d18c2d4b355b246';
 
 /// 发送面板控制器
 ///
