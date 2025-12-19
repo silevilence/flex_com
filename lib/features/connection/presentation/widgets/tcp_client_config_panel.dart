@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../connection/application/connection_providers.dart';
 import '../../../connection/domain/connection_config.dart';
+import '../../../settings/application/config_providers.dart';
 
 /// TCP Client 配置面板
 class TcpClientConfigPanel extends ConsumerStatefulWidget {
@@ -18,6 +19,7 @@ class _TcpClientConfigPanelState extends ConsumerState<TcpClientConfigPanel> {
   final _hostController = TextEditingController(text: '127.0.0.1');
   final _portController = TextEditingController(text: '8080');
   int _timeoutSeconds = 10;
+  bool _configLoaded = false;
 
   InputDecoration _compactDecoration(String label) => InputDecoration(
     labelText: label,
@@ -37,6 +39,18 @@ class _TcpClientConfigPanelState extends ConsumerState<TcpClientConfigPanel> {
   Widget build(BuildContext context) {
     final connectionState = ref.watch(unifiedConnectionProvider);
     final isConnected = connectionState.isConnected;
+
+    // 加载保存的配置（仅一次）
+    final savedConfigAsync = ref.watch(savedTcpClientConfigProvider);
+    if (!_configLoaded && savedConfigAsync.hasValue) {
+      final config = savedConfigAsync.value;
+      if (config != null) {
+        _hostController.text = config.host;
+        _portController.text = config.port.toString();
+        _timeoutSeconds = config.timeout.inSeconds;
+        _configLoaded = true;
+      }
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -154,6 +168,11 @@ class _TcpClientConfigPanelState extends ConsumerState<TcpClientConfigPanel> {
           timeout: Duration(seconds: _timeoutSeconds),
         );
         await notifier.connect(config);
+
+        // 保存配置
+        await ref
+            .read(savedTcpClientConfigProvider.notifier)
+            .saveConfig(config);
       }
     } catch (e) {
       if (mounted) {

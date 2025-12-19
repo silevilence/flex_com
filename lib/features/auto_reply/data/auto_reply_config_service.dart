@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import '../../../core/utils/app_paths.dart';
 import '../domain/auto_reply_config.dart';
 import '../domain/match_reply_config.dart';
 import '../domain/sequential_reply_config.dart';
@@ -43,22 +44,22 @@ class AutoReplyConfigService {
   AutoReplyConfigService({String? configPath}) : _configPath = configPath;
 
   final String? _configPath;
+  String? _cachedConfigPath;
 
   /// 获取配置文件路径
-  String get configFilePath {
+  Future<String> getConfigFilePath() async {
     if (_configPath != null) {
       return _configPath;
     }
-    // 获取可执行文件所在目录
-    final executablePath = Platform.resolvedExecutable;
-    final executableDir = File(executablePath).parent.path;
-    return '$executableDir${Platform.pathSeparator}config.json';
+    _cachedConfigPath ??= await AppPaths.getConfigFilePath();
+    return _cachedConfigPath!;
   }
 
   /// 读取完整的配置文件内容
   Future<Map<String, dynamic>> _readConfigFile() async {
     try {
-      final file = File(configFilePath);
+      final configPath = await getConfigFilePath();
+      final file = File(configPath);
       if (!await file.exists()) {
         return {};
       }
@@ -73,7 +74,8 @@ class AutoReplyConfigService {
   /// 写入完整的配置文件内容
   Future<bool> _writeConfigFile(Map<String, dynamic> config) async {
     try {
-      final file = File(configFilePath);
+      final configPath = await getConfigFilePath();
+      final file = File(configPath);
       final encoder = const JsonEncoder.withIndent('  ');
       await file.writeAsString(encoder.convert(config));
       return true;

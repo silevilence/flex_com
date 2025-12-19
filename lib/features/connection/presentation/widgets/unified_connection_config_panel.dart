@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../connection/application/connection_providers.dart';
 import '../../../connection/domain/connection_config.dart';
+import '../../../serial/domain/serial_port_config.dart';
 import '../../../settings/application/config_providers.dart';
 import 'tcp_client_config_panel.dart';
 import 'tcp_server_config_panel.dart';
@@ -468,8 +469,25 @@ class _SerialConfigPanelContentState
           flowControl: _flowControl,
         );
         await notifier.connect(config);
-        // 保存配置到旧格式（兼容）
-        // TODO: 未来统一配置保存格式
+
+        // 保存串口配置
+        final serialPortConfig = SerialPortConfig(
+          portName: _selectedPort!,
+          baudRate: _baudRate,
+          dataBits: _dataBits,
+          stopBits: _stopBits,
+          parity: Parity.values.firstWhere(
+            (p) => p.value == _parity.value,
+            orElse: () => Parity.none,
+          ),
+          flowControl: FlowControl.values.firstWhere(
+            (fc) => fc.value == _flowControl.value,
+            orElse: () => FlowControl.none,
+          ),
+        );
+        await ref
+            .read(savedConfigProvider.notifier)
+            .saveConfig(serialPortConfig);
       }
     } catch (e) {
       if (mounted) {

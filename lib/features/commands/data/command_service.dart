@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import '../../../core/utils/app_paths.dart';
 import '../domain/command.dart';
 
 /// 指令存储服务
@@ -11,22 +12,22 @@ class CommandService {
   CommandService({String? commandsPath}) : _commandsPath = commandsPath;
 
   final String? _commandsPath;
+  String? _cachedCommandsPath;
 
   /// 获取指令文件路径
-  String get commandsFilePath {
+  Future<String> getCommandsFilePath() async {
     if (_commandsPath != null) {
       return _commandsPath;
     }
-    // 获取可执行文件所在目录
-    final executablePath = Platform.resolvedExecutable;
-    final executableDir = File(executablePath).parent.path;
-    return '$executableDir${Platform.pathSeparator}commands.json';
+    _cachedCommandsPath ??= await AppPaths.getCommandsFilePath();
+    return _cachedCommandsPath!;
   }
 
   /// 加载所有指令
   Future<List<Command>> loadCommands() async {
     try {
-      final file = File(commandsFilePath);
+      final commandsPath = await getCommandsFilePath();
+      final file = File(commandsPath);
       if (!await file.exists()) {
         return [];
       }
@@ -57,7 +58,8 @@ class CommandService {
   /// 保存所有指令
   Future<bool> saveCommands(List<Command> commands) async {
     try {
-      final file = File(commandsFilePath);
+      final commandsPath = await getCommandsFilePath();
+      final file = File(commandsPath);
 
       final data = {
         'version': 1,
@@ -116,7 +118,8 @@ class CommandService {
 
   /// 检查指令文件是否存在
   Future<bool> commandsFileExists() async {
-    final file = File(commandsFilePath);
+    final commandsPath = await getCommandsFilePath();
+    final file = File(commandsPath);
     return file.exists();
   }
 

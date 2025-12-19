@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../connection/application/connection_providers.dart';
 import '../../../connection/domain/connection.dart';
 import '../../../connection/domain/connection_config.dart';
+import '../../../settings/application/config_providers.dart';
 
 /// TCP Server 配置面板
 class TcpServerConfigPanel extends ConsumerStatefulWidget {
@@ -19,6 +20,7 @@ class _TcpServerConfigPanelState extends ConsumerState<TcpServerConfigPanel> {
   final _bindAddressController = TextEditingController(text: '0.0.0.0');
   final _portController = TextEditingController(text: '8080');
   int _maxClients = 10;
+  bool _configLoaded = false;
 
   InputDecoration _compactDecoration(String label) => InputDecoration(
     labelText: label,
@@ -39,6 +41,18 @@ class _TcpServerConfigPanelState extends ConsumerState<TcpServerConfigPanel> {
     final connectionState = ref.watch(unifiedConnectionProvider);
     final isConnected = connectionState.isConnected;
     final clients = connectionState.connectedClients;
+
+    // 加载保存的配置（仅一次）
+    final savedConfigAsync = ref.watch(savedTcpServerConfigProvider);
+    if (!_configLoaded && savedConfigAsync.hasValue) {
+      final config = savedConfigAsync.value;
+      if (config != null) {
+        _bindAddressController.text = config.bindAddress;
+        _portController.text = config.port.toString();
+        _maxClients = config.maxClients;
+        _configLoaded = true;
+      }
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -203,6 +217,11 @@ class _TcpServerConfigPanelState extends ConsumerState<TcpServerConfigPanel> {
           maxClients: _maxClients,
         );
         await notifier.connect(config);
+
+        // 保存配置
+        await ref
+            .read(savedTcpServerConfigProvider.notifier)
+            .saveConfig(config);
       }
     } catch (e) {
       if (mounted) {

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../connection/application/connection_providers.dart';
 import '../../../connection/domain/connection_config.dart';
+import '../../../settings/application/config_providers.dart';
 
 /// UDP 配置面板
 class UdpConfigPanel extends ConsumerStatefulWidget {
@@ -21,6 +22,7 @@ class _UdpConfigPanelState extends ConsumerState<UdpConfigPanel> {
     text: '255.255.255.255',
   );
   UdpMode _mode = UdpMode.unicast;
+  bool _configLoaded = false;
 
   InputDecoration _compactDecoration(String label) => InputDecoration(
     labelText: label,
@@ -42,6 +44,20 @@ class _UdpConfigPanelState extends ConsumerState<UdpConfigPanel> {
   Widget build(BuildContext context) {
     final connectionState = ref.watch(unifiedConnectionProvider);
     final isConnected = connectionState.isConnected;
+
+    // 加载保存的配置（仅一次）
+    final savedConfigAsync = ref.watch(savedUdpConfigProvider);
+    if (!_configLoaded && savedConfigAsync.hasValue) {
+      final config = savedConfigAsync.value;
+      if (config != null) {
+        _localPortController.text = config.localPort.toString();
+        _remoteHostController.text = config.remoteHost;
+        _remotePortController.text = config.remotePort.toString();
+        _broadcastAddressController.text = config.broadcastAddress;
+        _mode = config.mode;
+        _configLoaded = true;
+      }
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -206,6 +222,9 @@ class _UdpConfigPanelState extends ConsumerState<UdpConfigPanel> {
           broadcastAddress: _broadcastAddressController.text.trim(),
         );
         await notifier.connect(config);
+
+        // 保存配置
+        await ref.read(savedUdpConfigProvider.notifier).saveConfig(config);
       }
     } catch (e) {
       if (mounted) {
