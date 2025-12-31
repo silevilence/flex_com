@@ -5,6 +5,7 @@ import 'package:multi_split_view/multi_split_view.dart';
 import '../../../auto_reply/presentation/widgets/auto_reply_panel.dart';
 import '../../../commands/presentation/widgets/command_list_panel.dart';
 import '../../../connection/presentation/widgets/unified_connection_config_panel.dart';
+import '../../../scripting/presentation/widgets/script_console_panel.dart';
 import '../../../serial/application/send_helper_providers.dart';
 import '../../../serial/presentation/widgets/data_display_panel.dart';
 import '../../../serial/presentation/widgets/send_panel.dart';
@@ -214,11 +215,7 @@ class _MultiZoneLayoutState extends ConsumerState<MultiZoneLayout> {
           child: AutoReplyPanel(),
         );
       case 'scripts':
-        return _buildPlaceholderContent(
-          '脚本控制',
-          '即将推出：支持 Lua/Dart 脚本自动化',
-          Icons.code,
-        );
+        return const ScriptConsolePanel();
       case 'chart':
         return _buildPlaceholderContent(
           '波形图',

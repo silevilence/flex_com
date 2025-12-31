@@ -44,7 +44,7 @@ final class ScriptServiceProvider
   }
 }
 
-String _$scriptServiceHash() => r'af4428b514b19fca86b9b20d5dfef91765b99b9f';
+String _$scriptServiceHash() => r'80f8ac167309dea75b3aacfdb3cb3094a91ea93c';
 
 /// 脚本服务Provider
 

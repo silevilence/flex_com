@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../connection/application/connection_providers.dart';
+import '../../serial/application/serial_data_providers.dart';
 import '../data/script_data_source.dart';
 import '../data/script_repository_impl.dart';
 import '../domain/script_entity.dart';
@@ -188,10 +191,29 @@ class ScriptService extends _$ScriptService {
   }
 
   /// 处理发送数据
-  void _handleSend(dynamic data) {
-    // 这里应该调用串口发送服务
-    // 暂时只记录日志
-    _handleLog('Send data: $data', 'debug');
+  void _handleSend(Uint8List data) {
+    _handleLog(
+      '发送数据: ${data.map((b) => b.toRadixString(16).padLeft(2, '0')).join(' ').toUpperCase()}',
+      'debug',
+    );
+
+    // 每次发送时重新读取最新连接状态
+    final connectionState = ref.read(unifiedConnectionProvider);
+    if (connectionState.isConnected) {
+      ref
+          .read(unifiedConnectionProvider.notifier)
+          .send(data)
+          .then((_) {
+            // 发送成功后记录到数据显示面板
+            ref.read(serialDataLogProvider.notifier).addSentData(data);
+            _handleLog('发送成功', 'info');
+          })
+          .catchError((e) {
+            _handleLog('发送失败: $e', 'error');
+          });
+    } else {
+      _handleLog('未连接，无法发送数据', 'warning');
+    }
   }
 
   /// 处理日志
