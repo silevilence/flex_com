@@ -5,10 +5,10 @@
 
 
 - [ ] 🟢 **[P2] 通用脚本系统 (General Scripting System)**
-    - [ ] **核心架构与管理 (Core & Management)**
-        - [ ] **脚本引擎**: 集成 Dart `eval` 或 Lua 环境，运行于独立的 Isolate 中以保障 UI 流畅性。
+    - [x] **核心架构与管理 (Core & Management)**
+        - [x] **脚本引擎**: 集成 Lua 环境 (lua_dardo)，支持脚本加载、执行、停止。
         - [ ] **脚本管理器**: 侧边栏/面板增加脚本管理页，支持文件的增删改查及简单语法高亮编辑。
-        - [ ] **API 桥接**: 暴露 `FCom` 全局对象，提供 `send`, `log`, `delay`, `crc` 等核心能力。
+        - [x] **API 桥接**: 暴露 `FCom` 全局对象，提供 `send`, `log`, `delay`, `crc16`, `crc32`, `checksum`, `getTimestamp` 等核心能力。
     - [ ] **Hook 挂载机制 (Hooking Mechanism)**
         - [ ] **Pipeline Hook (数据流钩子)**: 允许将脚本挂载为“接收预处理器” (修改/解密 Rx 数据) 或“发送后处理器” (加封包/校验 Tx 数据)。
         - [ ] **Reply Hook (应答钩子)**: 接入 P1 的自动回复系统，支持“脚本模式”，实现复杂的条件判断应答逻辑。
