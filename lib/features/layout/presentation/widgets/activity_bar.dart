@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../settings/presentation/settings_page.dart';
 import '../../application/layout_providers.dart';
 import '../../domain/layout_state.dart';
 import '../../domain/panel_config.dart';
@@ -89,6 +90,22 @@ class ActivityBar extends ConsumerWidget {
             ),
           ],
           const Spacer(),
+          // 设置按钮
+          _ActivityBarItem(
+            config: const PanelConfig(
+              id: 'settings',
+              title: '设置',
+              icon: Icons.settings_outlined,
+              defaultLocation: PanelLocation.left,
+            ),
+            isActive: false,
+            currentLocation: PanelLocation.left,
+            onTap: () {
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const SettingsPage()));
+            },
+          ),
           // 重置布局按钮
           _ActivityBarItem(
             config: const PanelConfig(

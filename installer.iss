@@ -36,7 +36,7 @@
 ; === 自动读取版本号部分 END ===
 
 #define MyAppName "Flex Com"
-#define MyAppPublisher "YourName"
+#define MyAppPublisher "Silevilence"
 #define MyAppURL "https://github.com/silevilence/flex_com"
 #define MyAppExeName "flex_com.exe" 
 ; 注意：上面的 MyAppExeName 必须与 pubspec.yaml 中的 name 字段一致（编译后的文件名）
@@ -67,6 +67,12 @@ SolidCompression=yes
 WizardStyle=modern
 ; Flutter Windows 仅支持 64位
 ArchitecturesInstallIn64BitMode=x64compatible
+
+; 定义一个互斥锁名称，确保同一时间只有一个实例运行，且安装包能检测到它
+AppMutex=MyFlexComAppMutex
+; 提示用户关闭程序，force 表示尝试自动关闭
+CloseApplications=yes
+RestartApplications=no
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

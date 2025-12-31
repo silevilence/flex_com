@@ -3,6 +3,7 @@
 ## 📝 计划中 (Planned)
 > 待开发的需求池，按优先级排序
 
+
 - [ ] 🟢 **[P2] 通用脚本系统 (General Scripting System)**
     - [ ] **核心架构与管理 (Core & Management)**
         - [ ] **脚本引擎**: 集成 Dart `eval` 或 Lua 环境，运行于独立的 Isolate 中以保障 UI 流畅性。
@@ -38,6 +39,19 @@
 
 ## ✅ 已完成 (Completed)
 > 已验收通过的功能
+
+- [x] 🟢 **[P2] 自动更新 (Auto Update)**
+    - [x] **版本检测逻辑**:
+        - [x] 集成 `package_info_plus` 获取本地版本。
+        - [x] 接入 GitHub API (`GET /repos/silevilence/flex_com/releases/latest`) 获取远程版本。
+        - [x] 实现 `pub_semver` 版本号比对逻辑 (如 `1.0.1` > `1.0.0`)。
+        - [x] 在设置页增加当前版本号显示。
+    - [x] **下载管理器**:
+        - [x] 实现 `Dio` 下载流，支持下载进度回调。
+        - [x] **UI 实现**: 在设置页增加"检查更新"按钮，以及弹窗显示 Release Note (更新日志) 和下载进度条。
+    - [x] **安装包唤起**:
+        - [x] 下载完成后使用 `open_filex` 唤起 `.exe` 安装包。
+        - [x] 优化退出逻辑：在安装包启动后，自动优雅关闭当前 Flutter 进程，避免文件占用锁死。
 
 - [x] 🟢 **[P2] 网络扩展 (Network Extension)**
     - [x] **抽象层重构**: 抽象出统一的 `IConnection` 接口，屏蔽串口与网络 Socket 的底层差异。
