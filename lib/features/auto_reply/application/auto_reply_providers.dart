@@ -260,5 +260,8 @@ ReplyHandler? activeReplyHandler(Ref ref) {
       final seqConfig = _getValueOrNull(seqConfigAsync);
       if (seqConfig == null) return null;
       return SequentialReplyHandler(config: seqConfig);
+    case AutoReplyMode.scriptReply:
+      // 脚本回复模式由 HookService 处理，不使用传统 Handler
+      return null;
   }
 }

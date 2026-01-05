@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multi_split_view/multi_split_view.dart';
 
+import 'hook_management_panel.dart';
 import 'script_list_panel.dart';
 import 'script_log_panel.dart';
 
@@ -17,8 +18,10 @@ class ScriptConsolePanel extends ConsumerStatefulWidget {
   ConsumerState<ScriptConsolePanel> createState() => _ScriptConsolePanelState();
 }
 
-class _ScriptConsolePanelState extends ConsumerState<ScriptConsolePanel> {
+class _ScriptConsolePanelState extends ConsumerState<ScriptConsolePanel>
+    with SingleTickerProviderStateMixin {
   late final MultiSplitViewController _controller;
+  late final TabController _tabController;
 
   @override
   void initState() {
@@ -29,11 +32,13 @@ class _ScriptConsolePanelState extends ConsumerState<ScriptConsolePanel> {
         Area(id: 'logs', flex: 1, min: 200),
       ],
     );
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -66,7 +71,63 @@ class _ScriptConsolePanelState extends ConsumerState<ScriptConsolePanel> {
                 right: BorderSide(color: colorScheme.outlineVariant),
               ),
             ),
-            child: const ScriptListPanel(),
+            child: Column(
+              children: [
+                // Tab 栏
+                Container(
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerLow,
+                    border: Border(
+                      bottom: BorderSide(color: colorScheme.outlineVariant),
+                    ),
+                  ),
+                  child: TabBar(
+                    controller: _tabController,
+                    labelColor: colorScheme.primary,
+                    unselectedLabelColor: colorScheme.outline,
+                    indicatorColor: colorScheme.primary,
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    dividerColor: Colors.transparent,
+                    labelStyle: Theme.of(context).textTheme.labelMedium
+                        ?.copyWith(fontWeight: FontWeight.w600),
+                    unselectedLabelStyle: Theme.of(
+                      context,
+                    ).textTheme.labelMedium,
+                    tabs: const [
+                      Tab(
+                        height: 36,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.code, size: 16),
+                            SizedBox(width: 6),
+                            Text('脚本'),
+                          ],
+                        ),
+                      ),
+                      Tab(
+                        height: 36,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.webhook, size: 16),
+                            SizedBox(width: 6),
+                            Text('Hook'),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Tab 内容
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: const [ScriptListPanel(), HookManagementPanel()],
+                  ),
+                ),
+              ],
+            ),
           );
         } else {
           return const ScriptLogPanel();

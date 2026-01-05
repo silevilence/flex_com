@@ -50,7 +50,7 @@ final class AutoReplyEngineProvider
   }
 }
 
-String _$autoReplyEngineHash() => r'aa2d202d7917a7e0c1ed8fea7698a7a64b950699';
+String _$autoReplyEngineHash() => r'65ecf2dfafbe59abfa248f88d0c4be376bca80ff';
 
 /// 自动回复引擎 Provider
 ///

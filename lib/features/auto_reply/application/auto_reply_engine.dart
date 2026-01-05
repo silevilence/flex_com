@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../connection/application/connection_providers.dart';
+import '../../scripting/application/hook_service.dart';
 import '../../serial/application/serial_data_providers.dart';
 import '../domain/auto_reply_config.dart';
 import '../domain/auto_reply_mode.dart';
@@ -118,7 +119,12 @@ class AutoReplyEngine extends _$AutoReplyEngine {
         final stream = notifier.dataStream;
         if (stream != null) {
           _subscription = stream.listen(
-            _onDataReceived,
+            (data) {
+              // IMPORTANT: Copy data immediately before async processing
+              // libserialport may reuse/free the buffer after callback returns
+              final dataCopy = Uint8List.fromList(data);
+              _onDataReceived(dataCopy);
+            },
             onError: (Object error) {
               // 忽略流错误以防止崩溃
             },
@@ -143,6 +149,12 @@ class AutoReplyEngine extends _$AutoReplyEngine {
     state = state.copyWith(
       stats: state.stats.copyWith(totalReceived: state.stats.totalReceived + 1),
     );
+
+    // 脚本模式使用 HookService 处理
+    if (globalConfig.activeMode == AutoReplyMode.scriptReply) {
+      await _processScriptReply(data, globalConfig);
+      return;
+    }
 
     // 获取处理器
     final handler = _getHandler(globalConfig);
@@ -202,6 +214,50 @@ class AutoReplyEngine extends _$AutoReplyEngine {
         final seqConfig = _getValueOrNull(seqConfigAsync);
         if (seqConfig == null) return null;
         return SequentialReplyHandler(config: seqConfig);
+      case AutoReplyMode.scriptReply:
+        // 脚本模式不使用传统 Handler，返回 null
+        return null;
+    }
+  }
+
+  /// 处理脚本回复模式
+  Future<void> _processScriptReply(
+    Uint8List data,
+    AutoReplyConfig globalConfig,
+  ) async {
+    state = state.copyWith(isProcessing: true);
+
+    try {
+      final hookService = ref.read(hookServiceProvider.notifier);
+      final responseData = await hookService.processReplyHook(
+        data,
+        globalDelayMs: globalConfig.globalDelayMs,
+      );
+
+      if (responseData != null) {
+        // 应用延迟
+        if (globalConfig.globalDelayMs > 0) {
+          await Future<void>.delayed(
+            Duration(milliseconds: globalConfig.globalDelayMs),
+          );
+        }
+
+        // 发送回复
+        await _sendReply(responseData);
+
+        // 更新统计
+        state = state.copyWith(
+          stats: state.stats.copyWith(
+            totalReplied: state.stats.totalReplied + 1,
+            lastMatchedRule: '脚本回复',
+            lastReplyTime: DateTime.now(),
+          ),
+        );
+      }
+    } catch (e) {
+      state = state.copyWith(lastError: e.toString());
+    } finally {
+      state = state.copyWith(isProcessing: false);
     }
   }
 

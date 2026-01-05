@@ -105,7 +105,7 @@ final class CyclicSendControllerProvider
 }
 
 String _$cyclicSendControllerHash() =>
-    r'7a11e9982a30f666f41157a0d8af6265ee1c5474';
+    r'0dd7b7bdfcd6a85fdedef8f2b7df81eb3054d1c2';
 
 /// 循环发送控制器
 

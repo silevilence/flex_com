@@ -9,7 +9,11 @@ enum AutoReplyMode {
 
   /// 顺序回复模式
   /// 每次收到数据后按顺序发送预设列表中的下一帧
-  sequentialReply;
+  sequentialReply,
+
+  /// 脚本回复模式
+  /// 使用 Lua 脚本实现复杂的条件判断应答逻辑
+  scriptReply;
 
   /// UI 显示名称
   String get displayName {
@@ -18,6 +22,8 @@ enum AutoReplyMode {
         return '匹配回复';
       case AutoReplyMode.sequentialReply:
         return '顺序回复';
+      case AutoReplyMode.scriptReply:
+        return '脚本回复';
     }
   }
 
@@ -28,6 +34,8 @@ enum AutoReplyMode {
         return '检测到特定数据时自动回复指定内容';
       case AutoReplyMode.sequentialReply:
         return '每次收到数据按顺序回复预设帧列表';
+      case AutoReplyMode.scriptReply:
+        return '使用 Lua 脚本实现复杂条件判断';
     }
   }
 }

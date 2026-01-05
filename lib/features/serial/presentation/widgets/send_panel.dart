@@ -6,6 +6,7 @@ import '../../../../core/utils/hex_utils.dart';
 import '../../../checksum_calculator/domain/calculator_state.dart';
 import '../../../checksum_calculator/presentation/checksum_calculator_dialog.dart';
 import '../../../connection/application/connection_providers.dart';
+import '../../../scripting/application/hook_service.dart';
 import '../../application/send_helper_providers.dart';
 import '../../application/serial_data_providers.dart';
 import '../../application/serial_providers.dart';
@@ -93,6 +94,10 @@ class _SendPanelState extends ConsumerState<SendPanel> {
     });
 
     try {
+      // Process through TX Hook if active
+      final hookService = ref.read(hookServiceProvider.notifier);
+      data = await hookService.processTxData(data);
+
       await ref.read(unifiedConnectionProvider.notifier).send(data);
       // Add to log
       ref.read(serialDataLogProvider.notifier).addSentData(data);

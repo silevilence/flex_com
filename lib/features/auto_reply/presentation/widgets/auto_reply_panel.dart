@@ -275,6 +275,9 @@ class _AutoReplyPanelState extends ConsumerState<AutoReplyPanel> {
         return const MatchReplyRuleList();
       case AutoReplyMode.sequentialReply:
         return const SequentialReplyFrameList();
+      case AutoReplyMode.scriptReply:
+        // 脚本回复模式在 Hook 管理面板中配置
+        return const Center(child: Text('脚本回复模式请在脚本管理面板中配置 Hook'));
     }
   }
 }

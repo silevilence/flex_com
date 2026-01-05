@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../application/hook_service.dart';
 import '../../application/script_service.dart';
 import '../../domain/script_log.dart';
 
@@ -11,7 +12,13 @@ class ScriptLogPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(scriptServiceProvider);
+    final scriptState = ref.watch(scriptServiceProvider);
+    final hookState = ref.watch(hookServiceProvider);
+
+    // 合并两个服务的日志并按时间排序
+    final allLogs = [...scriptState.logs, ...hookState.logs]
+      ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+
     final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
@@ -42,7 +49,7 @@ class ScriptLogPanel extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  '${state.logs.length}',
+                  '${allLogs.length}',
                   style: Theme.of(context).textTheme.labelSmall,
                 ),
               ),
@@ -52,10 +59,11 @@ class ScriptLogPanel extends ConsumerWidget {
                 message: '清除日志',
                 child: IconButton(
                   icon: const Icon(Icons.delete_sweep, size: 18),
-                  onPressed: state.logs.isEmpty
+                  onPressed: allLogs.isEmpty
                       ? null
                       : () {
                           ref.read(scriptServiceProvider.notifier).clearLogs();
+                          ref.read(hookServiceProvider.notifier).clearLogs();
                         },
                   visualDensity: VisualDensity.compact,
                 ),
@@ -65,9 +73,9 @@ class ScriptLogPanel extends ConsumerWidget {
         ),
         // 日志列表
         Expanded(
-          child: state.logs.isEmpty
+          child: allLogs.isEmpty
               ? _buildEmptyState(context)
-              : _buildLogList(context, state.logs),
+              : _buildLogList(context, allLogs),
         ),
       ],
     );
@@ -151,16 +159,20 @@ class _LogItem extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 时间戳
-          Text(
-            timeFormat.format(log.timestamp),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontFamily: 'Consolas, Monaco, monospace',
-              color: colorScheme.outline,
-              fontSize: 11,
+          // 时间戳 - 使用固定宽度避免溢出
+          SizedBox(
+            width: 85,
+            child: Text(
+              timeFormat.format(log.timestamp),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontFamily: 'Consolas, Monaco, monospace',
+                color: colorScheme.outline,
+                fontSize: 11,
+              ),
+              overflow: TextOverflow.clip,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 4),
           // 图标
           Icon(getIcon(), size: 14, color: getColor()),
           const SizedBox(width: 4),
@@ -173,6 +185,7 @@ class _LogItem extends StatelessWidget {
                 color: getColor(),
                 fontSize: 12,
               ),
+              softWrap: true,
             ),
           ),
         ],

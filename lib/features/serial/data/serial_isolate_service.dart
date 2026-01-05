@@ -162,6 +162,15 @@ class SerialIsolateService {
 
   /// Entry point for the isolate.
   static void _isolateEntryPoint(SendPort mainSendPort) {
+    // Use runZonedGuarded to catch all unhandled exceptions in isolate
+    runZonedGuarded(() => _isolateMain(mainSendPort), (error, stackTrace) {
+      // Send error to main thread instead of crashing
+      mainSendPort.send(IsolateResponse.error('Isolate error: $error'));
+    });
+  }
+
+  /// Main isolate logic
+  static void _isolateMain(SendPort mainSendPort) {
     final isolateReceivePort = ReceivePort();
     mainSendPort.send(isolateReceivePort.sendPort);
 
@@ -254,16 +263,40 @@ class SerialIsolateService {
 
             port!.config = portConfig;
 
+            // Function to start or restart reader
+            void startReader() {
+              readerSubscription?.cancel();
+              reader?.close();
+
+              reader = SerialPortReader(port!);
+              readerSubscription = reader!.stream.listen(
+                (data) {
+                  try {
+                    // IMPORTANT: Copy data immediately within isolate
+                    // libserialport may reuse the buffer after callback returns
+                    if (data.isNotEmpty) {
+                      final dataCopy = Uint8List.fromList(data);
+                      mainSendPort.send(IsolateResponse.dataReceived(dataCopy));
+                    }
+                  } catch (e) {
+                    // Ignore data processing errors, continue reading
+                  }
+                },
+                onError: (Object error) {
+                  // Try to restart reader on error
+                  try {
+                    startReader();
+                  } catch (_) {
+                    // If restart fails, just report error
+                    mainSendPort.send(IsolateResponse.error(error.toString()));
+                  }
+                },
+                cancelOnError: false,
+              );
+            }
+
             // Start reading
-            reader = SerialPortReader(port!);
-            readerSubscription = reader!.stream.listen(
-              (data) {
-                mainSendPort.send(IsolateResponse.dataReceived(data));
-              },
-              onError: (Object error) {
-                mainSendPort.send(IsolateResponse.error(error.toString()));
-              },
-            );
+            startReader();
 
             mainSendPort.send(
               IsolateResponse.success(IsolateResponseType.portOpened),

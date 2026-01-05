@@ -7,6 +7,7 @@ import '../../../core/utils/checksum_utils.dart';
 import '../../../core/utils/hex_utils.dart';
 import '../../commands/domain/command.dart';
 import '../../connection/application/connection_providers.dart';
+import '../../scripting/application/hook_service.dart';
 import '../domain/send_settings.dart';
 import '../domain/serial_data_entry.dart';
 import 'serial_data_providers.dart';
@@ -154,7 +155,11 @@ class CyclicSendController extends _$CyclicSendController {
     try {
       // 获取设置并处理数据
       final settings = ref.read(sendSettingsProvider);
-      final processedData = _processData(_currentData!, settings);
+      var processedData = _processData(_currentData!, settings);
+
+      // Process through TX Hook if active
+      final hookService = ref.read(hookServiceProvider.notifier);
+      processedData = await hookService.processTxData(processedData);
 
       // 发送数据
       await ref.read(unifiedConnectionProvider.notifier).send(processedData);

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../connection/application/connection_providers.dart';
+import '../../scripting/application/hook_service.dart';
 import '../domain/serial_data_entry.dart';
 import 'display_settings_providers.dart';
 
@@ -55,7 +56,11 @@ class SerialDataLog extends _$SerialDataLog {
         if (stream != null) {
           _subscription = stream.listen(
             (data) {
-              _addEntry(SerialDataEntry.received(data));
+              // IMPORTANT: Copy data immediately before async processing
+              // libserialport may reuse/free the buffer after callback returns
+              final dataCopy = Uint8List.fromList(data);
+              // Process data synchronously first, then through hook
+              _processAndAddEntry(dataCopy);
             },
             onError: (Object error) {
               // Ignore stream errors to prevent crash
@@ -63,6 +68,24 @@ class SerialDataLog extends _$SerialDataLog {
           );
         }
       }
+    }
+  }
+
+  /// Process received data and add to log
+  void _processAndAddEntry(Uint8List data) {
+    // Try to process through Rx Hook if available
+    _processRxHookAsync(data);
+  }
+
+  /// Process data through Rx Hook asynchronously
+  Future<void> _processRxHookAsync(Uint8List data) async {
+    try {
+      final hookService = ref.read(hookServiceProvider.notifier);
+      final processedData = await hookService.processRxData(data);
+      _addEntry(SerialDataEntry.received(processedData));
+    } catch (e) {
+      // Fallback: add original data if hook processing fails
+      _addEntry(SerialDataEntry.received(data));
     }
   }
 
@@ -84,6 +107,8 @@ class SerialDataLog extends _$SerialDataLog {
   }
 
   /// Adds a sent data entry to the log.
+  /// Note: TX Hook processing should be done BEFORE calling this method,
+  /// as the actual send happens before logging.
   void addSentData(Uint8List data) {
     _addEntry(SerialDataEntry.sent(data));
   }

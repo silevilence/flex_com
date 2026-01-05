@@ -83,29 +83,36 @@ class ScriptListPanel extends ConsumerWidget {
   Widget _buildEmptyState(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.code_off,
-            size: 48,
-            color: colorScheme.outline.withAlpha(128),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.code_off,
+                size: 48,
+                color: colorScheme.outline.withAlpha(128),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '暂无脚本',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: colorScheme.outline),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '点击 + 按钮创建新脚本',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: colorScheme.outline.withAlpha(180),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            '暂无脚本',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: colorScheme.outline),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '点击 + 按钮创建新脚本',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: colorScheme.outline.withAlpha(180),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
