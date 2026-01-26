@@ -10,6 +10,7 @@ import '../../../scripting/presentation/widgets/script_console_panel.dart';
 import '../../../serial/application/send_helper_providers.dart';
 import '../../../serial/presentation/widgets/data_display_panel.dart';
 import '../../../serial/presentation/widgets/send_panel.dart';
+import '../../../visualization/presentation/oscilloscope_panel.dart';
 import '../../application/layout_providers.dart';
 import '../../domain/layout_state.dart';
 import '../../domain/panel_config.dart';
@@ -220,43 +221,9 @@ class _MultiZoneLayoutState extends ConsumerState<MultiZoneLayout> {
       case 'frameParser':
         return const FrameParserPanel();
       case 'chart':
-        return _buildPlaceholderContent(
-          '波形图',
-          '即将推出：实时数据可视化',
-          Icons.show_chart,
-        );
+        return const OscilloscopePanel();
       default:
         return const Center(child: Text('未知面板'));
     }
-  }
-
-  /// 构建占位内容
-  Widget _buildPlaceholderContent(
-    String title,
-    String description,
-    IconData icon,
-  ) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 48, color: Theme.of(context).colorScheme.outline),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            description,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

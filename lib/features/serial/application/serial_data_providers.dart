@@ -1,10 +1,12 @@
 import 'dart:async';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../connection/application/connection_providers.dart';
+import '../../frame_parser/application/parser_providers.dart';
 import '../../scripting/application/hook_service.dart';
+import '../../visualization/application/visualization_providers.dart';
 import '../domain/serial_data_entry.dart';
 import 'display_settings_providers.dart';
 
@@ -83,9 +85,43 @@ class SerialDataLog extends _$SerialDataLog {
       final hookService = ref.read(hookServiceProvider.notifier);
       final processedData = await hookService.processRxData(data);
       _addEntry(SerialDataEntry.received(processedData));
+
+      // 协议解析并推送到波形图（使用同步缓冲方法）
+      _processFrameParserSync(processedData);
     } catch (e) {
       // Fallback: add original data if hook processing fails
       _addEntry(SerialDataEntry.received(data));
+    }
+  }
+
+  /// 协议解析并推送解析结果到波形图（同步缓冲，不阻塞）
+  void _processFrameParserSync(Uint8List data) {
+    try {
+      // 直接读取 parser 状态
+      final parserState = ref.read(parserProvider);
+      final parserData = parserState.value;
+      if (parserData == null ||
+          !parserData.isEnabled ||
+          parserData.activeConfig == null) {
+        debugPrint('[Oscilloscope] Parser 未启用或无配置');
+        return;
+      }
+
+      // 直接使用解析器解析
+      final parser = ref.read(parserRegistryProvider).defaultParser;
+      final parsedFrame = parser.parse(data, config: parserData.activeConfig);
+
+      debugPrint(
+        '[Oscilloscope] 解析结果: isValid=${parsedFrame.isValid}, fields=${parsedFrame.fields.length}',
+      );
+
+      // 如果解析成功，使用同步缓冲方法推送数据到波形图
+      if (parsedFrame.isValid) {
+        final oscilloscope = ref.read(oscilloscopeProvider.notifier);
+        oscilloscope.addDataFromParsedFrameBuffered(parsedFrame);
+      }
+    } catch (e) {
+      debugPrint('[Oscilloscope] 解析异常: $e');
     }
   }
 

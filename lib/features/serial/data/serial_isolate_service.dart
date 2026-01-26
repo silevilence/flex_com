@@ -164,7 +164,14 @@ class SerialIsolateService {
   static void _isolateEntryPoint(SendPort mainSendPort) {
     // Use runZonedGuarded to catch all unhandled exceptions in isolate
     runZonedGuarded(() => _isolateMain(mainSendPort), (error, stackTrace) {
-      // Send error to main thread instead of crashing
+      // Check for known libserialport FFI errors that are non-fatal
+      final errorStr = error.toString();
+      if (errorStr.contains('length must be in the range')) {
+        // libserialport FFI buffer error - ignore silently
+        // This happens on Windows when the port buffer state becomes invalid
+        return;
+      }
+      // Send other errors to main thread
       mainSendPort.send(IsolateResponse.error('Isolate error: $error'));
     });
   }
@@ -268,31 +275,67 @@ class SerialIsolateService {
               readerSubscription?.cancel();
               reader?.close();
 
-              reader = SerialPortReader(port!);
-              readerSubscription = reader!.stream.listen(
-                (data) {
-                  try {
-                    // IMPORTANT: Copy data immediately within isolate
-                    // libserialport may reuse the buffer after callback returns
-                    if (data.isNotEmpty) {
-                      final dataCopy = Uint8List.fromList(data);
-                      mainSendPort.send(IsolateResponse.dataReceived(dataCopy));
+              try {
+                reader = SerialPortReader(port!);
+                readerSubscription = reader!.stream.listen(
+                  (data) {
+                    try {
+                      // IMPORTANT: Copy data immediately within isolate
+                      // libserialport may reuse the buffer after callback returns
+                      if (data.isNotEmpty) {
+                        final dataCopy = Uint8List.fromList(data);
+                        mainSendPort.send(
+                          IsolateResponse.dataReceived(dataCopy),
+                        );
+                      }
+                    } catch (e) {
+                      // Ignore data processing errors, continue reading
                     }
-                  } catch (e) {
-                    // Ignore data processing errors, continue reading
-                  }
-                },
-                onError: (Object error) {
-                  // Try to restart reader on error
-                  try {
-                    startReader();
-                  } catch (_) {
-                    // If restart fails, just report error
-                    mainSendPort.send(IsolateResponse.error(error.toString()));
-                  }
-                },
-                cancelOnError: false,
-              );
+                  },
+                  onError: (Object error) {
+                    // libserialport may throw Invalid argument errors on Windows
+                    // when port state becomes invalid. Try to restart reader.
+                    final errorStr = error.toString();
+
+                    // Check for known non-fatal FFI errors
+                    if (errorStr.contains('length must be in the range')) {
+                      // Buffer state error - try to restart reader after delay
+                      Future.delayed(const Duration(milliseconds: 200), () {
+                        if (port != null && port!.isOpen) {
+                          startReader();
+                        }
+                      });
+                      return;
+                    }
+
+                    // For other errors, also try to restart
+                    try {
+                      Future.delayed(const Duration(milliseconds: 100), () {
+                        if (port != null && port!.isOpen) {
+                          startReader();
+                        }
+                      });
+                    } catch (_) {
+                      // If restart fails, just log error
+                    }
+                  },
+                  cancelOnError: false,
+                );
+              } catch (e) {
+                // SerialPortReader creation may fail if port is in bad state
+                // Check for known FFI errors
+                final errorStr = e.toString();
+                if (errorStr.contains('length must be in the range')) {
+                  // Try to restart after delay
+                  Future.delayed(const Duration(milliseconds: 300), () {
+                    if (port != null && port!.isOpen) {
+                      startReader();
+                    }
+                  });
+                  return;
+                }
+                // Silently ignore other errors - user can manually reconnect
+              }
             }
 
             // Start reading
