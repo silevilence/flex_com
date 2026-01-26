@@ -89,6 +89,14 @@ class PanelConfigs {
     defaultLocation: PanelLocation.bottom,
   );
 
+  /// 协议解析器面板
+  static const frameParser = PanelConfig(
+    id: 'frameParser',
+    title: '协议解析',
+    icon: Icons.settings_input_component,
+    defaultLocation: PanelLocation.right,
+  );
+
   /// 所有面板配置列表
   static const List<PanelConfig> all = [
     serial,
@@ -96,6 +104,7 @@ class PanelConfigs {
     autoReply,
     scripts,
     chart,
+    frameParser,
   ];
 
   /// 根据 ID 获取面板配置

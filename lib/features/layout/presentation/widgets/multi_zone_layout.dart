@@ -5,6 +5,7 @@ import 'package:multi_split_view/multi_split_view.dart';
 import '../../../auto_reply/presentation/widgets/auto_reply_panel.dart';
 import '../../../commands/presentation/widgets/command_list_panel.dart';
 import '../../../connection/presentation/widgets/unified_connection_config_panel.dart';
+import '../../../frame_parser/presentation/frame_parser_panel.dart';
 import '../../../scripting/presentation/widgets/script_console_panel.dart';
 import '../../../serial/application/send_helper_providers.dart';
 import '../../../serial/presentation/widgets/data_display_panel.dart';
@@ -216,6 +217,8 @@ class _MultiZoneLayoutState extends ConsumerState<MultiZoneLayout> {
         );
       case 'scripts':
         return const ScriptConsolePanel();
+      case 'frameParser':
+        return const FrameParserPanel();
       case 'chart':
         return _buildPlaceholderContent(
           '波形图',

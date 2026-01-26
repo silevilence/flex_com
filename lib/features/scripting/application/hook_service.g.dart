@@ -44,7 +44,7 @@ final class HookServiceProvider
   }
 }
 
-String _$hookServiceHash() => r'd2e7fdf41b591b01bacbd658ff57c325ff1b0709';
+String _$hookServiceHash() => r'c0dc88640d1614b5f171d8d21144dfe9a8b3d20e';
 
 /// Hook 服务 Provider
 
