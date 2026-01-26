@@ -186,4 +186,138 @@ class ConfigService {
     final file = File(configPath);
     return file.exists();
   }
+
+  // ============ Layout Config ============
+
+  /// 加载布局配置
+  Future<LayoutConfig?> loadLayoutConfig() async {
+    try {
+      final json = await _readConfigFile();
+      final layoutConfig = json['layout'] as Map<String, dynamic>?;
+      if (layoutConfig == null) {
+        return null;
+      }
+      return LayoutConfig.fromJson(layoutConfig);
+    } catch (e) {
+      // ignore: avoid_print
+      print('Failed to load layout config: $e');
+      return null;
+    }
+  }
+
+  /// 保存布局配置
+  Future<bool> saveLayoutConfig(LayoutConfig config) async {
+    try {
+      final existingConfig = await _readConfigFile();
+      existingConfig['layout'] = config.toJson();
+      return _writeConfigFile(existingConfig);
+    } catch (e) {
+      // ignore: avoid_print
+      print('Failed to save layout config: $e');
+      return false;
+    }
+  }
+
+  // ============ Parser State Config ============
+
+  /// 加载解析器状态配置
+  Future<ParserStateConfig?> loadParserStateConfig() async {
+    try {
+      final json = await _readConfigFile();
+      final parserConfig = json['parserState'] as Map<String, dynamic>?;
+      if (parserConfig == null) {
+        return null;
+      }
+      return ParserStateConfig.fromJson(parserConfig);
+    } catch (e) {
+      // ignore: avoid_print
+      print('Failed to load parser state config: $e');
+      return null;
+    }
+  }
+
+  /// 保存解析器状态配置
+  Future<bool> saveParserStateConfig(ParserStateConfig config) async {
+    try {
+      final existingConfig = await _readConfigFile();
+      existingConfig['parserState'] = config.toJson();
+      return _writeConfigFile(existingConfig);
+    } catch (e) {
+      // ignore: avoid_print
+      print('Failed to save parser state config: $e');
+      return false;
+    }
+  }
+}
+
+/// 布局配置数据类
+class LayoutConfig {
+  const LayoutConfig({
+    required this.panelLocations,
+    required this.activePanels,
+  });
+
+  factory LayoutConfig.fromJson(Map<String, dynamic> json) {
+    final locations = <String, String>{};
+    final rawLocations = json['panelLocations'] as Map<String, dynamic>?;
+    if (rawLocations != null) {
+      for (final entry in rawLocations.entries) {
+        locations[entry.key] = entry.value as String;
+      }
+    }
+
+    final active = <String, String?>{};
+    final rawActive = json['activePanels'] as Map<String, dynamic>?;
+    if (rawActive != null) {
+      for (final entry in rawActive.entries) {
+        active[entry.key] = entry.value as String?;
+      }
+    }
+
+    return LayoutConfig(
+      panelLocations: locations,
+      activePanels: active,
+    );
+  }
+
+  /// 面板位置映射 (panelId -> locationName)
+  final Map<String, String> panelLocations;
+
+  /// 激活面板映射 (locationName -> panelId)
+  final Map<String, String?> activePanels;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'panelLocations': panelLocations,
+      'activePanels': activePanels,
+    };
+  }
+}
+
+/// 解析器状态配置数据类
+class ParserStateConfig {
+  const ParserStateConfig({
+    required this.isEnabled,
+    this.activeConfigId,
+  });
+
+  factory ParserStateConfig.fromJson(Map<String, dynamic> json) {
+    return ParserStateConfig(
+      isEnabled: json['isEnabled'] as bool? ?? false,
+      activeConfigId: json['activeConfigId'] as String?,
+    );
+  }
+
+  /// 解析器是否启用
+  final bool isEnabled;
+
+  /// 当前激活的配置 ID
+  final String? activeConfigId;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'isEnabled': isEnabled,
+      'activeConfigId': activeConfigId,
+    };
+  }
 }

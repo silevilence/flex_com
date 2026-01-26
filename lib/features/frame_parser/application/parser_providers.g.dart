@@ -135,7 +135,7 @@ final class ParserNotifierProvider
   ParserNotifier create() => ParserNotifier();
 }
 
-String _$parserNotifierHash() => r'61fd725d7fd5d8535bf6ad8737d1a1b15d111925';
+String _$parserNotifierHash() => r'a118d7fa450d9dc3043fb9ae8dc96c1b4f3e079a';
 
 /// 解析器状态管理
 

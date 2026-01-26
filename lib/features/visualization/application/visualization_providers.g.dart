@@ -91,7 +91,7 @@ final class OscilloscopeNotifierProvider
 }
 
 String _$oscilloscopeNotifierHash() =>
-    r'9ab78013eb3cf3db3d95c0dd1bc99de6ee734c5d';
+    r'3315304bd52bd65f6d92a9d65aca60f0c44f7aeb';
 
 /// 示波器状态管理
 

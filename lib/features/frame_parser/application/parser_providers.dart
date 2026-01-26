@@ -2,6 +2,8 @@ import 'dart:typed_data';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../settings/application/config_providers.dart';
+import '../../settings/data/config_service.dart';
 import '../data/frame_config_repository.dart';
 import '../data/parser_registry.dart';
 import '../domain/frame_config.dart';
@@ -39,7 +41,29 @@ class ParserNotifier extends _$ParserNotifier {
   Future<ParserState> build() async {
     final repository = ref.read(frameConfigRepositoryProvider);
     final configs = await repository.loadConfigs();
-    return ParserState(configs: configs);
+
+    // 加载保存的状态配置
+    final configService = ref.read(configServiceProvider);
+    final savedState = await configService.loadParserStateConfig();
+
+    return ParserState(
+      configs: configs,
+      isEnabled: savedState?.isEnabled ?? false,
+      activeConfigId: savedState?.activeConfigId,
+    );
+  }
+
+  /// 保存解析器状态配置
+  Future<void> _saveStateConfig() async {
+    final current = _getValueOrNull(state);
+    if (current == null) return;
+
+    final configService = ref.read(configServiceProvider);
+    final config = ParserStateConfig(
+      isEnabled: current.isEnabled,
+      activeConfigId: current.activeConfigId,
+    );
+    await configService.saveParserStateConfig(config);
   }
 
   /// 添加新配置
@@ -80,6 +104,11 @@ class ParserNotifier extends _$ParserNotifier {
 
     final repository = ref.read(frameConfigRepositoryProvider);
     await repository.saveConfigs(newConfigs);
+
+    // 如果清除了激活配置，保存状态
+    if (clearActive) {
+      await _saveStateConfig();
+    }
   }
 
   /// 设置激活的配置
@@ -91,18 +120,21 @@ class ParserNotifier extends _$ParserNotifier {
         clearActiveConfigId: configId == null,
       ),
     );
+    await _saveStateConfig();
   }
 
   /// 切换解析器启用状态
   Future<void> toggleEnabled() async {
     final current = await future;
     state = AsyncData(current.copyWith(isEnabled: !current.isEnabled));
+    await _saveStateConfig();
   }
 
   /// 设置解析器启用状态
   Future<void> setEnabled(bool enabled) async {
     final current = await future;
     state = AsyncData(current.copyWith(isEnabled: enabled));
+    await _saveStateConfig();
   }
 
   /// 解析数据

@@ -44,7 +44,7 @@ final class LayoutNotifierProvider
   }
 }
 
-String _$layoutNotifierHash() => r'0db9b5913edbb8aa015d8a1d12508f5cad9c9691';
+String _$layoutNotifierHash() => r'913240d12ce2471ee1e0e5d1eb05dfed2e1743eb';
 
 /// 布局状态管理 Notifier
 
