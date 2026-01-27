@@ -169,7 +169,20 @@ class _SerialConfigPanelContentState
   int _stopBits = 1;
   SerialParity _parity = SerialParity.none;
   SerialFlowControl _flowControl = SerialFlowControl.none;
+  int _interByteTimeout = 20;
+  int _maxFrameLength = 4096;
   bool _configLoaded = false;
+
+  // Text controllers for numeric input fields
+  final _interByteTimeoutController = TextEditingController(text: '20');
+  final _maxFrameLengthController = TextEditingController(text: '4096');
+
+  @override
+  void dispose() {
+    _interByteTimeoutController.dispose();
+    _maxFrameLengthController.dispose();
+    super.dispose();
+  }
 
   InputDecoration _compactDecoration(String label) => InputDecoration(
     labelText: label,
@@ -195,6 +208,10 @@ class _SerialConfigPanelContentState
         _baudRate = config.baudRate;
         _dataBits = config.dataBits;
         _stopBits = config.stopBits;
+        _interByteTimeout = config.interByteTimeout;
+        _maxFrameLength = config.maxFrameLength;
+        _interByteTimeoutController.text = config.interByteTimeout.toString();
+        _maxFrameLengthController.text = config.maxFrameLength.toString();
         // 转换旧的枚举类型
         _parity = SerialParity.values.firstWhere(
           (p) => p.value == config.parity.value,
@@ -304,6 +321,34 @@ class _SerialConfigPanelContentState
 
         // 流控
         SizedBox(height: 36, child: _buildFlowControlDropdown(isConnected)),
+        const SizedBox(height: 8),
+
+        // 字节间延迟
+        _buildNumberInputField(
+          label: '字节间延迟(ms)',
+          controller: _interByteTimeoutController,
+          enabled: !isConnected,
+          onChanged: (value) {
+            final parsed = int.tryParse(value);
+            if (parsed != null && parsed > 0) {
+              setState(() => _interByteTimeout = parsed);
+            }
+          },
+        ),
+        const SizedBox(height: 8),
+
+        // 最大帧长
+        _buildNumberInputField(
+          label: '最大帧长(字节)',
+          controller: _maxFrameLengthController,
+          enabled: !isConnected,
+          onChanged: (value) {
+            final parsed = int.tryParse(value);
+            if (parsed != null && parsed > 0) {
+              setState(() => _maxFrameLength = parsed);
+            }
+          },
+        ),
         const SizedBox(height: 10),
 
         // 连接按钮
@@ -452,6 +497,29 @@ class _SerialConfigPanelContentState
     );
   }
 
+  Widget _buildNumberInputField({
+    required String label,
+    required TextEditingController controller,
+    required bool enabled,
+    required void Function(String) onChanged,
+  }) {
+    return TextFormField(
+      controller: controller,
+      enabled: enabled,
+      keyboardType: TextInputType.number,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 12,
+        ),
+      ),
+      style: Theme.of(context).textTheme.bodyMedium,
+      onChanged: onChanged,
+    );
+  }
+
   Future<void> _toggleConnection() async {
     final notifier = ref.read(unifiedConnectionProvider.notifier);
     final isConnected = ref.read(unifiedConnectionProvider).isConnected;
@@ -467,6 +535,8 @@ class _SerialConfigPanelContentState
           stopBits: _stopBits,
           parity: _parity,
           flowControl: _flowControl,
+          interByteTimeout: _interByteTimeout,
+          maxFrameLength: _maxFrameLength,
         );
         await notifier.connect(config);
 
@@ -484,6 +554,8 @@ class _SerialConfigPanelContentState
             (fc) => fc.value == _flowControl.value,
             orElse: () => FlowControl.none,
           ),
+          interByteTimeout: _interByteTimeout,
+          maxFrameLength: _maxFrameLength,
         );
         await ref
             .read(savedConfigProvider.notifier)

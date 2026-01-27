@@ -11,6 +11,7 @@ part of 'serial_data_providers.dart';
 /// Notifier that manages the list of serial data entries.
 ///
 /// This collects both sent and received data into a single log.
+/// Implements frame assembly using inter-byte timeout and max frame length.
 
 @ProviderFor(SerialDataLog)
 const serialDataLogProvider = SerialDataLogProvider._();
@@ -18,11 +19,13 @@ const serialDataLogProvider = SerialDataLogProvider._();
 /// Notifier that manages the list of serial data entries.
 ///
 /// This collects both sent and received data into a single log.
+/// Implements frame assembly using inter-byte timeout and max frame length.
 final class SerialDataLogProvider
     extends $NotifierProvider<SerialDataLog, List<SerialDataEntry>> {
   /// Notifier that manages the list of serial data entries.
   ///
   /// This collects both sent and received data into a single log.
+  /// Implements frame assembly using inter-byte timeout and max frame length.
   const SerialDataLogProvider._()
     : super(
         from: null,
@@ -50,11 +53,12 @@ final class SerialDataLogProvider
   }
 }
 
-String _$serialDataLogHash() => r'fd312ba9a41f7918e1e9518a60f683edb48f889e';
+String _$serialDataLogHash() => r'c204d1dab63873ba5c71e5a456c41c57ea0aadf0';
 
 /// Notifier that manages the list of serial data entries.
 ///
 /// This collects both sent and received data into a single log.
+/// Implements frame assembly using inter-byte timeout and max frame length.
 
 abstract class _$SerialDataLog extends $Notifier<List<SerialDataEntry>> {
   List<SerialDataEntry> build();

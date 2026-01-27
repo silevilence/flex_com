@@ -86,6 +86,8 @@ class SerialPortConfig extends Equatable {
     this.stopBits = 1,
     this.parity = Parity.none,
     this.flowControl = FlowControl.none,
+    this.interByteTimeout = 20,
+    this.maxFrameLength = 4096,
   });
 
   /// Creates a default configuration for the specified port.
@@ -110,6 +112,16 @@ class SerialPortConfig extends Equatable {
 
   /// Flow control setting (default: none)
   final FlowControl flowControl;
+
+  /// Inter-byte timeout in milliseconds for frame assembly.
+  /// Bytes received within this timeout are grouped into a single frame.
+  /// Default: 20ms
+  final int interByteTimeout;
+
+  /// Maximum frame length in bytes.
+  /// When received data exceeds this length, it will be forced to split into a new frame.
+  /// Default: 4096 bytes
+  final int maxFrameLength;
 
   /// Common baud rates for UI selection
   static const List<int> commonBaudRates = [
@@ -141,6 +153,8 @@ class SerialPortConfig extends Equatable {
     int? stopBits,
     Parity? parity,
     FlowControl? flowControl,
+    int? interByteTimeout,
+    int? maxFrameLength,
   }) {
     return SerialPortConfig(
       portName: portName ?? this.portName,
@@ -149,6 +163,8 @@ class SerialPortConfig extends Equatable {
       stopBits: stopBits ?? this.stopBits,
       parity: parity ?? this.parity,
       flowControl: flowControl ?? this.flowControl,
+      interByteTimeout: interByteTimeout ?? this.interByteTimeout,
+      maxFrameLength: maxFrameLength ?? this.maxFrameLength,
     );
   }
 
@@ -160,13 +176,16 @@ class SerialPortConfig extends Equatable {
     stopBits,
     parity,
     flowControl,
+    interByteTimeout,
+    maxFrameLength,
   ];
 
   @override
   String toString() {
     return 'SerialPortConfig(portName: $portName, baudRate: $baudRate, '
         'dataBits: $dataBits, stopBits: $stopBits, parity: $parity, '
-        'flowControl: $flowControl)';
+        'flowControl: $flowControl, interByteTimeout: $interByteTimeout, '
+        'maxFrameLength: $maxFrameLength)';
   }
 
   /// Converts this configuration to a JSON map.
@@ -178,6 +197,8 @@ class SerialPortConfig extends Equatable {
       'stopBits': stopBits,
       'parity': parity.value,
       'flowControl': flowControl.value,
+      'interByteTimeout': interByteTimeout,
+      'maxFrameLength': maxFrameLength,
     };
   }
 
@@ -196,6 +217,8 @@ class SerialPortConfig extends Equatable {
         (fc) => fc.value == (json['flowControl'] as int? ?? 0),
         orElse: () => FlowControl.none,
       ),
+      interByteTimeout: json['interByteTimeout'] as int? ?? 20,
+      maxFrameLength: json['maxFrameLength'] as int? ?? 4096,
     );
   }
 }

@@ -15,6 +15,8 @@ void main() {
           expect(config.stopBits, 1);
           expect(config.parity, Parity.none);
           expect(config.flowControl, FlowControl.none);
+          expect(config.interByteTimeout, 20);
+          expect(config.maxFrameLength, 4096);
         },
       );
 
@@ -26,6 +28,8 @@ void main() {
           stopBits: 2,
           parity: Parity.even,
           flowControl: FlowControl.hardware,
+          interByteTimeout: 50,
+          maxFrameLength: 8192,
         );
 
         expect(config.portName, 'COM3');
@@ -34,6 +38,8 @@ void main() {
         expect(config.stopBits, 2);
         expect(config.parity, Parity.even);
         expect(config.flowControl, FlowControl.hardware);
+        expect(config.interByteTimeout, 50);
+        expect(config.maxFrameLength, 8192);
       });
     });
 
@@ -47,6 +53,8 @@ void main() {
         expect(config.stopBits, 1);
         expect(config.parity, Parity.none);
         expect(config.flowControl, FlowControl.none);
+        expect(config.interByteTimeout, 20);
+        expect(config.maxFrameLength, 4096);
       });
     });
 
@@ -61,7 +69,25 @@ void main() {
         expect(updated.stopBits, 1);
         expect(updated.parity, Parity.none);
         expect(updated.flowControl, FlowControl.none);
+        expect(updated.interByteTimeout, 20);
+        expect(updated.maxFrameLength, 4096);
       });
+
+      test(
+        'should create a copy with updated interByteTimeout and maxFrameLength',
+        () {
+          const original = SerialPortConfig(portName: 'COM1');
+          final updated = original.copyWith(
+            interByteTimeout: 100,
+            maxFrameLength: 2048,
+          );
+
+          expect(updated.interByteTimeout, 100);
+          expect(updated.maxFrameLength, 2048);
+          expect(updated.portName, 'COM1');
+          expect(updated.baudRate, 9600);
+        },
+      );
 
       test('should create a copy with multiple updated fields', () {
         const original = SerialPortConfig(portName: 'COM1');
@@ -187,6 +213,8 @@ void main() {
         stopBits: 1,
         parity: Parity.none,
         flowControl: FlowControl.hardware,
+        interByteTimeout: 30,
+        maxFrameLength: 2048,
       );
 
       final json = config.toJson();
@@ -197,6 +225,8 @@ void main() {
       expect(json['stopBits'], equals(1));
       expect(json['parity'], equals(0));
       expect(json['flowControl'], equals(1));
+      expect(json['interByteTimeout'], equals(30));
+      expect(json['maxFrameLength'], equals(2048));
     });
 
     test('fromJson creates correct config', () {
@@ -207,6 +237,8 @@ void main() {
         'stopBits': 2,
         'parity': 2,
         'flowControl': 2,
+        'interByteTimeout': 50,
+        'maxFrameLength': 1024,
       };
 
       final config = SerialPortConfig.fromJson(json);
@@ -217,6 +249,8 @@ void main() {
       expect(config.stopBits, equals(2));
       expect(config.parity, equals(Parity.even));
       expect(config.flowControl, equals(FlowControl.software));
+      expect(config.interByteTimeout, equals(50));
+      expect(config.maxFrameLength, equals(1024));
     });
 
     test('fromJson uses defaults for missing fields', () {
@@ -230,6 +264,8 @@ void main() {
       expect(config.stopBits, equals(1));
       expect(config.parity, equals(Parity.none));
       expect(config.flowControl, equals(FlowControl.none));
+      expect(config.interByteTimeout, equals(20));
+      expect(config.maxFrameLength, equals(4096));
     });
 
     test('fromJson handles null portName', () {
@@ -264,6 +300,8 @@ void main() {
         stopBits: 2,
         parity: Parity.odd,
         flowControl: FlowControl.dtrDsr,
+        interByteTimeout: 100,
+        maxFrameLength: 512,
       );
 
       final json = original.toJson();
@@ -288,6 +326,35 @@ void main() {
         final restored = SerialPortConfig.fromJson(json);
         expect(restored.flowControl, equals(fc));
       }
+    });
+  });
+
+  group('Frame assembly parameters', () {
+    test('interByteTimeout should not be equal when values differ', () {
+      const config1 = SerialPortConfig(portName: 'COM1', interByteTimeout: 20);
+      const config2 = SerialPortConfig(portName: 'COM1', interByteTimeout: 50);
+
+      expect(config1, isNot(equals(config2)));
+    });
+
+    test('maxFrameLength should not be equal when values differ', () {
+      const config1 = SerialPortConfig(portName: 'COM1', maxFrameLength: 4096);
+      const config2 = SerialPortConfig(portName: 'COM1', maxFrameLength: 8192);
+
+      expect(config1, isNot(equals(config2)));
+    });
+
+    test('toString includes frame assembly parameters', () {
+      const config = SerialPortConfig(
+        portName: 'COM1',
+        interByteTimeout: 30,
+        maxFrameLength: 2048,
+      );
+
+      final str = config.toString();
+
+      expect(str, contains('interByteTimeout: 30'));
+      expect(str, contains('maxFrameLength: 2048'));
     });
   });
 }

@@ -88,6 +88,8 @@ class SerialConnectionConfig extends ConnectionConfig {
     this.stopBits = 1,
     this.parity = SerialParity.none,
     this.flowControl = SerialFlowControl.none,
+    this.interByteTimeout = 20,
+    this.maxFrameLength = 4096,
   }) : super(type: ConnectionType.serial, name: portName);
 
   /// The name of the serial port
@@ -107,6 +109,16 @@ class SerialConnectionConfig extends ConnectionConfig {
 
   /// Flow control setting
   final SerialFlowControl flowControl;
+
+  /// Inter-byte timeout in milliseconds for frame assembly.
+  /// Bytes received within this timeout are grouped into a single frame.
+  /// Default: 20ms
+  final int interByteTimeout;
+
+  /// Maximum frame length in bytes.
+  /// When received data exceeds this length, it will be forced to split.
+  /// Default: 4096 bytes
+  final int maxFrameLength;
 
   /// Common baud rates for UI selection
   static const List<int> commonBaudRates = [
@@ -137,6 +149,8 @@ class SerialConnectionConfig extends ConnectionConfig {
     int? stopBits,
     SerialParity? parity,
     SerialFlowControl? flowControl,
+    int? interByteTimeout,
+    int? maxFrameLength,
   }) {
     return SerialConnectionConfig(
       portName: portName ?? this.portName,
@@ -145,6 +159,8 @@ class SerialConnectionConfig extends ConnectionConfig {
       stopBits: stopBits ?? this.stopBits,
       parity: parity ?? this.parity,
       flowControl: flowControl ?? this.flowControl,
+      interByteTimeout: interByteTimeout ?? this.interByteTimeout,
+      maxFrameLength: maxFrameLength ?? this.maxFrameLength,
     );
   }
 
@@ -158,6 +174,8 @@ class SerialConnectionConfig extends ConnectionConfig {
       'stopBits': stopBits,
       'parity': parity.value,
       'flowControl': flowControl.value,
+      'interByteTimeout': interByteTimeout,
+      'maxFrameLength': maxFrameLength,
     };
   }
 
@@ -175,6 +193,8 @@ class SerialConnectionConfig extends ConnectionConfig {
         (fc) => fc.value == (json['flowControl'] as int? ?? 0),
         orElse: () => SerialFlowControl.none,
       ),
+      interByteTimeout: json['interByteTimeout'] as int? ?? 20,
+      maxFrameLength: json['maxFrameLength'] as int? ?? 4096,
     );
   }
 
@@ -186,6 +206,8 @@ class SerialConnectionConfig extends ConnectionConfig {
     stopBits,
     parity,
     flowControl,
+    interByteTimeout,
+    maxFrameLength,
   ];
 
   @override

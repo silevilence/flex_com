@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../connection/application/connection_providers.dart';
+import '../../connection/domain/connection_config.dart';
 import '../../frame_parser/application/parser_providers.dart';
 import '../../scripting/application/hook_service.dart';
 import '../../visualization/application/visualization_providers.dart';
@@ -15,12 +16,31 @@ part 'serial_data_providers.g.dart';
 /// Maximum number of entries to keep in memory.
 const int _maxEntries = 1000;
 
+/// Default inter-byte timeout in milliseconds.
+const int _defaultInterByteTimeout = 20;
+
+/// Default maximum frame length in bytes.
+const int _defaultMaxFrameLength = 4096;
+
 /// Notifier that manages the list of serial data entries.
 ///
 /// This collects both sent and received data into a single log.
+/// Implements frame assembly using inter-byte timeout and max frame length.
 @Riverpod(keepAlive: true)
 class SerialDataLog extends _$SerialDataLog {
   StreamSubscription<Uint8List>? _subscription;
+
+  /// Buffer for accumulating received bytes into frames
+  final List<int> _receiveBuffer = [];
+
+  /// Timer for inter-byte timeout frame assembly
+  Timer? _frameTimer;
+
+  /// Current inter-byte timeout in milliseconds
+  int _interByteTimeout = _defaultInterByteTimeout;
+
+  /// Current maximum frame length in bytes
+  int _maxFrameLength = _defaultMaxFrameLength;
 
   @override
   List<SerialDataEntry> build() {
@@ -35,6 +55,9 @@ class SerialDataLog extends _$SerialDataLog {
     ref.onDispose(() {
       _subscription?.cancel();
       _subscription = null;
+      _frameTimer?.cancel();
+      _frameTimer = null;
+      _receiveBuffer.clear();
     });
 
     return [];
@@ -51,8 +74,14 @@ class SerialDataLog extends _$SerialDataLog {
     if (wasConnected != isConnected) {
       _subscription?.cancel();
       _subscription = null;
+      _frameTimer?.cancel();
+      _frameTimer = null;
+      _receiveBuffer.clear();
 
       if (isConnected) {
+        // Update frame assembly parameters from connection config
+        _updateFrameAssemblyConfig(next.config);
+
         final notifier = ref.read(unifiedConnectionProvider.notifier);
         final stream = notifier.dataStream;
         if (stream != null) {
@@ -61,8 +90,8 @@ class SerialDataLog extends _$SerialDataLog {
               // IMPORTANT: Copy data immediately before async processing
               // libserialport may reuse/free the buffer after callback returns
               final dataCopy = Uint8List.fromList(data);
-              // Process data synchronously first, then through hook
-              _processAndAddEntry(dataCopy);
+              // Accumulate data and assemble frames
+              _accumulateData(dataCopy);
             },
             onError: (Object error) {
               // Ignore stream errors to prevent crash
@@ -71,6 +100,54 @@ class SerialDataLog extends _$SerialDataLog {
         }
       }
     }
+  }
+
+  /// Update frame assembly configuration from connection config
+  void _updateFrameAssemblyConfig(ConnectionConfig? config) {
+    if (config is SerialConnectionConfig) {
+      _interByteTimeout = config.interByteTimeout;
+      _maxFrameLength = config.maxFrameLength;
+    } else {
+      // Use defaults for non-serial connections
+      _interByteTimeout = _defaultInterByteTimeout;
+      _maxFrameLength = _defaultMaxFrameLength;
+    }
+  }
+
+  /// Accumulate received data into buffer and manage frame assembly
+  void _accumulateData(Uint8List data) {
+    // Cancel existing timer
+    _frameTimer?.cancel();
+
+    // Add data to buffer
+    _receiveBuffer.addAll(data);
+
+    // Check if buffer exceeds max frame length
+    while (_receiveBuffer.length >= _maxFrameLength) {
+      // Extract a full frame
+      final frame = Uint8List.fromList(
+        _receiveBuffer.sublist(0, _maxFrameLength),
+      );
+      _receiveBuffer.removeRange(0, _maxFrameLength);
+      _processAndAddEntry(frame);
+    }
+
+    // Start new timer for remaining data
+    if (_receiveBuffer.isNotEmpty) {
+      _frameTimer = Timer(
+        Duration(milliseconds: _interByteTimeout),
+        _flushBuffer,
+      );
+    }
+  }
+
+  /// Flush remaining buffer as a complete frame
+  void _flushBuffer() {
+    if (_receiveBuffer.isEmpty) return;
+
+    final frame = Uint8List.fromList(_receiveBuffer);
+    _receiveBuffer.clear();
+    _processAndAddEntry(frame);
   }
 
   /// Process received data and add to log

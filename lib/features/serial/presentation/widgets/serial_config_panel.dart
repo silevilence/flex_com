@@ -23,7 +23,20 @@ class _SerialConfigPanelState extends ConsumerState<SerialConfigPanel> {
   int _stopBits = 1;
   Parity _parity = Parity.none;
   FlowControl _flowControl = FlowControl.none;
+  int _interByteTimeout = 20;
+  int _maxFrameLength = 4096;
   bool _configLoaded = false;
+
+  // Text controllers for numeric input fields
+  final _interByteTimeoutController = TextEditingController(text: '20');
+  final _maxFrameLengthController = TextEditingController(text: '4096');
+
+  @override
+  void dispose() {
+    _interByteTimeoutController.dispose();
+    _maxFrameLengthController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,6 +56,10 @@ class _SerialConfigPanelState extends ConsumerState<SerialConfigPanel> {
         _stopBits = config.stopBits;
         _parity = config.parity;
         _flowControl = config.flowControl;
+        _interByteTimeout = config.interByteTimeout;
+        _maxFrameLength = config.maxFrameLength;
+        _interByteTimeoutController.text = config.interByteTimeout.toString();
+        _maxFrameLengthController.text = config.maxFrameLength.toString();
         _configLoaded = true;
       }
     }
@@ -117,6 +134,34 @@ class _SerialConfigPanelState extends ConsumerState<SerialConfigPanel> {
 
             // Flow control
             _buildFlowControlDropdown(isConnected),
+            const SizedBox(height: 12),
+
+            // Inter-byte timeout
+            _buildNumberInputField(
+              label: '字节间延迟(ms)',
+              controller: _interByteTimeoutController,
+              enabled: !isConnected,
+              onChanged: (value) {
+                final parsed = int.tryParse(value);
+                if (parsed != null && parsed > 0) {
+                  setState(() => _interByteTimeout = parsed);
+                }
+              },
+            ),
+            const SizedBox(height: 12),
+
+            // Max frame length
+            _buildNumberInputField(
+              label: '最大帧长(字节)',
+              controller: _maxFrameLengthController,
+              enabled: !isConnected,
+              onChanged: (value) {
+                final parsed = int.tryParse(value);
+                if (parsed != null && parsed > 0) {
+                  setState(() => _maxFrameLength = parsed);
+                }
+              },
+            ),
             const SizedBox(height: 16),
 
             // Connect/Disconnect button
@@ -295,6 +340,28 @@ class _SerialConfigPanelState extends ConsumerState<SerialConfigPanel> {
     );
   }
 
+  Widget _buildNumberInputField({
+    required String label,
+    required TextEditingController controller,
+    required bool enabled,
+    required void Function(String) onChanged,
+  }) {
+    return TextFormField(
+      controller: controller,
+      enabled: enabled,
+      keyboardType: TextInputType.number,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 12,
+        ),
+      ),
+      onChanged: onChanged,
+    );
+  }
+
   Future<void> _toggleConnection(BuildContext context) async {
     final connectionNotifier = ref.read(serialConnectionProvider.notifier);
     final isConnected = ref.read(serialConnectionProvider).isConnected;
@@ -310,6 +377,8 @@ class _SerialConfigPanelState extends ConsumerState<SerialConfigPanel> {
           stopBits: _stopBits,
           parity: _parity,
           flowControl: _flowControl,
+          interByteTimeout: _interByteTimeout,
+          maxFrameLength: _maxFrameLength,
         );
         await connectionNotifier.connect(config);
 
