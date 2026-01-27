@@ -18,5 +18,8 @@
     "files.watcherExclude": {
         "**/.dart_tool/**": true,
         "**/build/**": true
+    },
+    "chat.tools.terminal.autoApprove": {
+        "type": true
     }
 }

@@ -51,6 +51,8 @@ dependencies:
   http: ^1.6.0
   lua_dardo: ^0.0.5
   fl_chart: ^1.1.1
+  re_editor: ^0.8.0
+  re_highlight: ^0.0.3
 
 dev_dependencies:
   flutter_test:
