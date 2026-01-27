@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../connection/domain/connection_config.dart';
@@ -104,5 +105,25 @@ class SavedUdpConfig extends _$SavedUdpConfig {
       state = AsyncData(config);
     }
     return success;
+  }
+}
+
+// ============ Theme Mode Config ============
+
+/// Notifier for managing theme mode.
+@Riverpod(keepAlive: true)
+class ThemeModeNotifier extends _$ThemeModeNotifier {
+  @override
+  Future<ThemeMode> build() async {
+    final service = ref.watch(configServiceProvider);
+    final config = await service.loadThemeConfig();
+    return config.themeMode;
+  }
+
+  /// Sets the theme mode and persists it.
+  Future<void> setThemeMode(ThemeMode mode) async {
+    final service = ref.read(configServiceProvider);
+    await service.saveThemeMode(mode);
+    state = AsyncData(mode);
   }
 }

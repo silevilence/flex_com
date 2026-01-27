@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/material.dart';
+
 import '../../../core/utils/app_paths.dart';
 import '../../connection/domain/connection_config.dart';
 import '../../serial/domain/serial_port_config.dart';
+import '../domain/theme_config.dart';
 
 /// Service for reading and writing user configuration to a JSON file.
 ///
@@ -248,6 +251,42 @@ class ConfigService {
       return false;
     }
   }
+
+  // ============ Theme Config ============
+
+  /// 加载主题配置
+  Future<ThemeConfig> loadThemeConfig() async {
+    try {
+      final json = await _readConfigFile();
+      final themeConfig = json['theme'] as Map<String, dynamic>?;
+      if (themeConfig == null) {
+        return const ThemeConfig();
+      }
+      return ThemeConfig.fromJson(themeConfig);
+    } catch (e) {
+      // ignore: avoid_print
+      print('Failed to load theme config: $e');
+      return const ThemeConfig();
+    }
+  }
+
+  /// 保存主题配置
+  Future<bool> saveThemeConfig(ThemeConfig config) async {
+    try {
+      final existingConfig = await _readConfigFile();
+      existingConfig['theme'] = config.toJson();
+      return _writeConfigFile(existingConfig);
+    } catch (e) {
+      // ignore: avoid_print
+      print('Failed to save theme config: $e');
+      return false;
+    }
+  }
+
+  /// 快速保存主题模式
+  Future<bool> saveThemeMode(ThemeMode mode) async {
+    return saveThemeConfig(ThemeConfig(themeMode: mode));
+  }
 }
 
 /// 布局配置数据类
@@ -274,10 +313,7 @@ class LayoutConfig {
       }
     }
 
-    return LayoutConfig(
-      panelLocations: locations,
-      activePanels: active,
-    );
+    return LayoutConfig(panelLocations: locations, activePanels: active);
   }
 
   /// 面板位置映射 (panelId -> locationName)
@@ -287,19 +323,13 @@ class LayoutConfig {
   final Map<String, String?> activePanels;
 
   Map<String, dynamic> toJson() {
-    return {
-      'panelLocations': panelLocations,
-      'activePanels': activePanels,
-    };
+    return {'panelLocations': panelLocations, 'activePanels': activePanels};
   }
 }
 
 /// 解析器状态配置数据类
 class ParserStateConfig {
-  const ParserStateConfig({
-    required this.isEnabled,
-    this.activeConfigId,
-  });
+  const ParserStateConfig({required this.isEnabled, this.activeConfigId});
 
   factory ParserStateConfig.fromJson(Map<String, dynamic> json) {
     return ParserStateConfig(
@@ -315,9 +345,6 @@ class ParserStateConfig {
   final String? activeConfigId;
 
   Map<String, dynamic> toJson() {
-    return {
-      'isEnabled': isEnabled,
-      'activeConfigId': activeConfigId,
-    };
+    return {'isEnabled': isEnabled, 'activeConfigId': activeConfigId};
   }
 }

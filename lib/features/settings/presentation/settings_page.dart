@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../update/application/update_providers.dart';
 import '../../update/domain/update_info.dart';
 import '../../update/presentation/update_dialog.dart';
+import '../application/config_providers.dart';
 
 /// Settings page of the FlexCom application.
 class SettingsPage extends ConsumerWidget {
@@ -15,8 +16,89 @@ class SettingsPage extends ConsumerWidget {
       appBar: AppBar(title: const Text('设置'), centerTitle: true),
       body: ListView(
         padding: const EdgeInsets.all(16),
-        children: [_buildAboutSection(context, ref)],
+        children: [
+          _buildThemeSection(context, ref),
+          const SizedBox(height: 16),
+          _buildAboutSection(context, ref),
+        ],
       ),
+    );
+  }
+
+  Widget _buildThemeSection(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final themeModeAsync = ref.watch(themeModeProvider);
+    final currentMode = themeModeAsync.value ?? ThemeMode.system;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.palette_outlined, color: theme.colorScheme.primary),
+                const SizedBox(width: 8),
+                Text(
+                  '外观',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 24),
+            Row(
+              children: [
+                Icon(
+                  Icons.brightness_6,
+                  size: 20,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text('主题模式', style: theme.textTheme.bodyMedium),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _buildThemeModeSelector(context, ref, currentMode),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThemeModeSelector(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeMode currentMode,
+  ) {
+    return SegmentedButton<ThemeMode>(
+      segments: const [
+        ButtonSegment(
+          value: ThemeMode.light,
+          icon: Icon(Icons.light_mode),
+          label: Text('日间'),
+        ),
+        ButtonSegment(
+          value: ThemeMode.dark,
+          icon: Icon(Icons.dark_mode),
+          label: Text('夜间'),
+        ),
+        ButtonSegment(
+          value: ThemeMode.system,
+          icon: Icon(Icons.settings_suggest),
+          label: Text('跟随系统'),
+        ),
+      ],
+      selected: {currentMode},
+      onSelectionChanged: (Set<ThemeMode> selection) {
+        if (selection.isNotEmpty) {
+          ref.read(themeModeProvider.notifier).setThemeMode(selection.first);
+        }
+      },
     );
   }
 

@@ -315,3 +315,54 @@ abstract class _$SavedUdpConfig extends $AsyncNotifier<UdpConfig?> {
     element.handleValue(ref, created);
   }
 }
+
+/// Notifier for managing theme mode.
+
+@ProviderFor(ThemeModeNotifier)
+const themeModeProvider = ThemeModeNotifierProvider._();
+
+/// Notifier for managing theme mode.
+final class ThemeModeNotifierProvider
+    extends $AsyncNotifierProvider<ThemeModeNotifier, ThemeMode> {
+  /// Notifier for managing theme mode.
+  const ThemeModeNotifierProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'themeModeProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$themeModeNotifierHash();
+
+  @$internal
+  @override
+  ThemeModeNotifier create() => ThemeModeNotifier();
+}
+
+String _$themeModeNotifierHash() => r'de5f95b4e901410e00a020135ac6f9d378ed35ab';
+
+/// Notifier for managing theme mode.
+
+abstract class _$ThemeModeNotifier extends $AsyncNotifier<ThemeMode> {
+  FutureOr<ThemeMode> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref = this.ref as $Ref<AsyncValue<ThemeMode>, ThemeMode>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<ThemeMode>, ThemeMode>,
+              AsyncValue<ThemeMode>,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
+}
