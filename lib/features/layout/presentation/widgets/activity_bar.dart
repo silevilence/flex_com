@@ -41,7 +41,7 @@ class ActivityBar extends ConsumerWidget {
     return Container(
       width: 48,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        color: Theme.of(context).colorScheme.surfaceContainer,
         border: Border(
           right: BorderSide(
             color: Theme.of(context).colorScheme.outlineVariant,
@@ -50,7 +50,7 @@ class ActivityBar extends ConsumerWidget {
       ),
       child: Column(
         children: [
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           // 左侧区域面板图标（上部）
           ...leftPanels.map(
             (config) => _buildItem(
@@ -90,6 +90,9 @@ class ActivityBar extends ConsumerWidget {
             ),
           ],
           const Spacer(),
+          // 分隔线
+          _buildDivider(context),
+          const SizedBox(height: 4),
           // 设置按钮
           _ActivityBarItem(
             config: const PanelConfig(
@@ -111,7 +114,7 @@ class ActivityBar extends ConsumerWidget {
             config: const PanelConfig(
               id: 'reset',
               title: '重置布局',
-              icon: Icons.restore,
+              icon: Icons.restore_outlined,
               defaultLocation: PanelLocation.left,
             ),
             isActive: false,
@@ -120,7 +123,7 @@ class ActivityBar extends ConsumerWidget {
               ref.read(layoutProvider.notifier).resetLayout();
             },
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
         ],
       ),
     );
@@ -175,7 +178,7 @@ class ActivityBar extends ConsumerWidget {
 }
 
 /// Activity Bar 单个项目
-class _ActivityBarItem extends StatelessWidget {
+class _ActivityBarItem extends StatefulWidget {
   const _ActivityBarItem({
     required this.config,
     required this.isActive,
@@ -191,36 +194,60 @@ class _ActivityBarItem extends StatelessWidget {
   final void Function(PanelLocation)? onMoveTo;
 
   @override
+  State<_ActivityBarItem> createState() => _ActivityBarItemState();
+}
+
+class _ActivityBarItemState extends State<_ActivityBarItem> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isActive = widget.isActive;
 
     return GestureDetector(
-      onSecondaryTapDown: onMoveTo != null
+      onSecondaryTapDown: widget.onMoveTo != null
           ? (details) => _showContextMenu(context, details.globalPosition)
           : null,
       child: Tooltip(
-        message: config.title,
+        message: widget.config.title,
         preferBelow: false,
         waitDuration: const Duration(milliseconds: 500),
-        child: InkWell(
-          onTap: onTap,
-          child: Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              border: Border(
-                left: BorderSide(
-                  color: isActive ? colorScheme.primary : Colors.transparent,
-                  width: 2,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onEnter: (_) => setState(() => _isHovered = true),
+          onExit: (_) => setState(() => _isHovered = false),
+          child: InkWell(
+            onTap: widget.onTap,
+            borderRadius: BorderRadius.circular(8),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              width: 48,
+              height: 44,
+              margin: const EdgeInsets.symmetric(vertical: 2),
+              decoration: BoxDecoration(
+                color: isActive
+                    ? colorScheme.primaryContainer.withValues(alpha: 0.5)
+                    : _isHovered
+                    ? colorScheme.surfaceContainerHigh
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+                border: Border(
+                  left: BorderSide(
+                    color: isActive ? colorScheme.primary : Colors.transparent,
+                    width: 3,
+                  ),
                 ),
               ),
-            ),
-            child: Icon(
-              config.icon,
-              size: 24,
-              color: isActive
-                  ? colorScheme.primary
-                  : colorScheme.onSurfaceVariant,
+              child: Icon(
+                widget.config.icon,
+                size: 22,
+                color: isActive
+                    ? colorScheme.primary
+                    : _isHovered
+                    ? colorScheme.onSurface
+                    : colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
         ),
@@ -242,13 +269,13 @@ class _ActivityBarItem extends StatelessWidget {
         for (final location in PanelLocation.values)
           PopupMenuItem<PanelLocation>(
             value: location,
-            enabled: location != currentLocation,
+            enabled: location != widget.currentLocation,
             child: Row(
               children: [
                 Icon(
                   _getLocationIcon(location),
                   size: 18,
-                  color: location == currentLocation
+                  color: location == widget.currentLocation
                       ? Theme.of(context).colorScheme.outline
                       : null,
                 ),
@@ -259,8 +286,8 @@ class _ActivityBarItem extends StatelessWidget {
           ),
       ],
     ).then((value) {
-      if (value != null && onMoveTo != null) {
-        onMoveTo!(value);
+      if (value != null && widget.onMoveTo != null) {
+        widget.onMoveTo!(value);
       }
     });
   }
