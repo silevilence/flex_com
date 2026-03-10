@@ -7,6 +7,8 @@
 
 > 🔌 现代化、跨平台的串口调试助手
 
+> 已使用 [WPF](https://mp.weixin.qq.com/s/AJZQXbozWNSPA50J51Le0w) 重写。
+
 ## 简介
 
 **FlexCom** 是一个基于 Flutter 开发的现代化串口调试助手，专为嵌入式开发者和硬件调试人员设计。采用 Isolate 架构确保串口 I/O 操作不阻塞 UI，提供流畅的用户体验。
