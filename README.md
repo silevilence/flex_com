@@ -7,7 +7,7 @@
 
 > 🔌 现代化、跨平台的串口调试助手
 
-> 已使用 [WPF](https://mp.weixin.qq.com/s/AJZQXbozWNSPA50J51Le0w) 重写。
+> 已使用 [WPF](https://github.com/silevilence/FlexComDotnet) 重写。
 
 ## 简介
 
